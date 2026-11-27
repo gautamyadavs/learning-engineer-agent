@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learning Engineer Agent — Rubric v0.3.2 Annotation Studio (Pilot)</title>
+    <meta
+      name="description"
+      content="Password-protected Learning Engineer Agent pilot studio: upload Learning Objectives or Assessments/Quizzes for inline annotations, deterministic 100-point scoring, KLI Knowledge Component checks, and Prior Knowledge Audits."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%230d386e'/%3E%3Cstop offset='100%25' stop-color='%231b5eab'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='40' height='40' rx='9' fill='url(%23g)'/%3E%3Cpath d='M10.5 12.5c3.8 0 6.8.9 9.5 2.7 2.7-1.8 5.7-2.7 9.5-2.7v15.2c-3.8 0-6.8.9-9.5 2.7-2.7-1.8-5.7-2.7-9.5-2.7V12.5Z' fill='none' stroke='%23faf8f5' stroke-width='2.1' stroke-linejoin='round'/%3E%3Cpath d='M20 15.2v15.2' stroke='%23faf8f5' stroke-width='1.8' stroke-linecap='round'/%3E%3Ccircle cx='28.5' cy='12.5' r='4.5' fill='%23147043' stroke='%23faf8f5' stroke-width='1.6'/%3E%3Cpath d='M26.7 12.5l1.3 1.3 2.5-2.6' fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!-- WCAG 2.4.1 Bypass Blocks Skip Link -->
+    <a href="#main-workspace" class="skip-link" id="skip-to-workspace" hidden>
+      Skip to document workspace
+    </a>
+
+    <!-- Full-Screen Cryptographic Pilot Access Gate (Blocks Unauthorized Access) -->
+    <section
+      id="pilot-lock-screen"
+      class="pilot-lock-screen"
+      aria-labelledby="pilot-lock-heading"
+    >
+      <div class="pilot-lock-card">
+        <div class="pilot-lock-brand">
+          <div class="brand-logo" aria-hidden="true">
+            <svg
+              class="brand-logo-svg"
+              viewBox="0 0 40 40"
+              width="42"
+              height="42"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="le-lock-grad" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#0C356A" />
+                  <stop offset="100%" stop-color="#1A5BA6" />
+                </linearGradient>
+              </defs>
+              <rect width="40" height="40" rx="9.5" fill="url(#le-lock-grad)" />
+              <path
+                d="M9.5 13C13.4 13 16.9 13.95 20 15.85C23.1 13.95 26.6 13 30.5 13V27.6C26.6 27.6 23.1 28.55 20 30.45C16.9 28.55 13.4 27.6 9.5 27.6V13Z"
+                fill="rgba(250,248,245,0.10)"
+                stroke="#FAF8F5"
+                stroke-width="2"
+                stroke-linejoin="round"
+              />
+              <path d="M20 15.85V30.45" stroke="#FAF8F5" stroke-width="1.75" stroke-linecap="round" />
+              <path d="M12.5 17.8H17.2" stroke="#FAF8F5" stroke-width="1.5" stroke-linecap="round" opacity="0.85" />
+              <path d="M12.5 21.3H16.5" stroke="#F6C453" stroke-width="1.6" stroke-linecap="round" />
+              <path d="M12.5 24.6H17.2" stroke="#FAF8F5" stroke-width="1.5" stroke-linecap="round" opacity="0.85" />
+              <circle cx="29.5" cy="11.5" r="5.2" fill="#147043" stroke="#FAF8F5" stroke-width="1.7" />
+              <path
+                d="M27.3 11.55L28.85 13.1L31.85 9.95"
+                stroke="#FFFFFF"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <div>
+            <span class="pilot-lock-eyebrow">Protected Research &amp; Design Pilot</span>
+            <h2 id="pilot-lock-heading" class="pilot-lock-title">Learning Engineer Agent</h2>
+          </div>
+        </div>
+
+        <p class="pilot-lock-desc">
+          Access to this Annotation Studio is restricted to invited pilot testers. Enter your pilot passcode to unlock the workspace and authenticate AI audit requests.
+        </p>
+
+        <form id="pilot-unlock-form" class="pilot-unlock-form" novalidate>
+          <label for="pilot-passcode-input" class="pilot-lock-label">Pilot Access Passcode</label>
+          <div class="pilot-input-row">
+            <input
+              type="password"
+              id="pilot-passcode-input"
+              class="pilot-passcode-input"
+              autocomplete="current-password"
+              placeholder="Enter pilot passcode..."
+              required
+            />
+            <button
+              type="button"
+              id="btn-toggle-passcode-vis"
+              class="btn btn-xs"
+              aria-pressed="false"
+              aria-label="Show passcode characters"
+            >
+              Show
+            </button>
+          </div>
+
+          <p id="pilot-lock-error" class="pilot-lock-error" role="alert" hidden></p>
+
+          <button type="submit" id="btn-unlock-studio" class="btn btn-primary pilot-unlock-btn">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <rect x="3" y="7" width="10" height="7" rx="1.8" stroke="currentColor" stroke-width="1.6" />
+              <path d="M5.2 7V5a2.8 2.8 0 0 1 5.6 0v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+            <span id="btn-unlock-label">Unlock Annotation Studio</span>
+          </button>
+        </form>
+
+        <p class="pilot-lock-footnote">
+          Verified via 120,000-iteration PBKDF2-SHA256. Your passcode is held strictly in active tab memory and never saved to browser storage.
+        </p>
+      </div>
+    </section>
+
+    <!-- Top Studio Header (Hidden & Inert Until Unlocked) -->
+    <header class="studio-topbar" id="studio-topbar" role="banner" hidden inert>
+      <div class="brand-cluster">
+        <div class="brand-logo" aria-hidden="true">
+          <svg
+            class="brand-logo-svg"
+            viewBox="0 0 40 40"
+            width="38"
+            height="38"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <linearGradient id="le-crest-grad" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#0C356A" />
+                <stop offset="100%" stop-color="#1A5BA6" />
+              </linearGradient>
+            </defs>
+            <rect width="40" height="40" rx="9.5" fill="url(#le-crest-grad)" />
+            <rect
+              x="1"
+              y="1"
+              width="38"
+              height="38"
+              rx="8.5"
+              stroke="rgba(255,255,255,0.16)"
+              stroke-width="1"
+            />
+            <path
+              d="M9.5 13C13.4 13 16.9 13.95 20 15.85C23.1 13.95 26.6 13 30.5 13V27.6C26.6 27.6 23.1 28.55 20 30.45C16.9 28.55 13.4 27.6 9.5 27.6V13Z"
+              fill="rgba(250,248,245,0.10)"
+              stroke="#FAF8F5"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path d="M20 15.85V30.45" stroke="#FAF8F5" stroke-width="1.75" stroke-linecap="round" />
+            <path d="M12.5 17.8H17.2" stroke="#FAF8F5" stroke-width="1.5" stroke-linecap="round" opacity="0.85" />
+            <path d="M12.5 21.3H16.5" stroke="#F6C453" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M12.5 24.6H17.2" stroke="#FAF8F5" stroke-width="1.5" stroke-linecap="round" opacity="0.85" />
+            <circle cx="29.5" cy="11.5" r="5.2" fill="#147043" stroke="#FAF8F5" stroke-width="1.7" />
+            <path
+              d="M27.3 11.55L28.85 13.1L31.85 9.95"
+              stroke="#FFFFFF"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <h1>Learning Engineer Agent</h1>
+          <span class="brand-subtitle">Rubric v0.3.2 · Protected Pilot Studio</span>
+        </div>
+      </div>
+
+      <!-- 4-Track Segmented Bar (Tracks 1 & 2 Active, Tracks 3 & 4 Next) -->
+      <nav class="track-segmented" aria-label="Evaluation Track">
+        <button
+          type="button"
+          id="track-btn-lo"
+          class="track-btn"
+          data-track="objectives_only"
+          aria-pressed="true"
+        >
+          <span class="track-num">1</span> Learning Objectives
+        </button>
+        <button
+          type="button"
+          id="track-btn-quiz"
+          class="track-btn"
+          data-track="assessment_quiz"
+          aria-pressed="false"
+        >
+          <span class="track-num">2</span> Assessment / Quiz
+        </button>
+        <button
+          type="button"
+          id="track-btn-lesson"
+          class="track-btn"
+          disabled
+          aria-disabled="true"
+          title="Track 3 (Lesson / Activity Page) rubric calibration coming next"
+        >
+          <span class="track-num">3</span> Lesson Page <span class="track-soon-tag">Soon</span>
+        </button>
+        <button
+          type="button"
+          id="track-btn-module"
+          class="track-btn"
+          disabled
+          aria-disabled="true"
+          title="Track 4 (Full Module) rubric calibration coming next"
+        >
+          <span class="track-num">4</span> Full Module <span class="track-soon-tag">Soon</span>
+        </button>
+      </nav>
+
+      <!-- Explicit User Actions -->
+      <div class="topbar-actions">
+        <button
+          type="button"
+          id="btn-connect-ai"
+          class="conn-pill"
+          data-mode="deterministic_engine"
+          aria-haspopup="dialog"
+          aria-controls="modal-connection"
+          title="Connect Gemini API (or any OpenAI-compatible LLM) for pilot testing"
+        >
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span id="conn-status-label">Offline Rubric · Link Gemini API</span>
+        </button>
+
+        <input
+          type="file"
+          id="file-upload-input"
+          accept=".md,.markdown,.txt,.docx,.html,.htm"
+          hidden
+        />
+        <button type="button" id="btn-upload-doc" class="btn" title="Upload .docx, .md, or .txt document">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M8 10.5V2.5M8 2.5L4.75 5.75M8 2.5L11.25 5.75M2.5 11V12.5C2.5 13.05 2.95 13.5 3.5 13.5H12.5C13.05 13.5 13.5 13.05 13.5 12.5V11"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span>Upload</span>
+        </button>
+
+        <button
+          type="button"
+          id="btn-run-audit"
+          class="btn btn-primary"
+          title="Run explicit Learning Engineering Audit (Ctrl+Enter or Cmd+Enter)"
+        >
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M8 1.75L9.45 5.15L13.1 5.5L10.35 7.95L11.15 11.55L8 9.65L4.85 11.55L5.65 7.95L2.9 5.5L6.55 5.15L8 1.75Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span id="btn-run-audit-label">Run AI Audit</span>
+        </button>
+
+        <button
+          type="button"
+          id="btn-lock-session"
+          class="btn btn-xs"
+          title="Lock Pilot Studio session and wipe tab memory"
+          aria-label="Lock session"
+        >
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="3" y="7" width="10" height="7" rx="1.8" stroke="currentColor" stroke-width="1.6" />
+            <path d="M5.2 7V5a2.8 2.8 0 0 1 5.6 0v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+          <span>Lock</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main 2-Column Annotation Workspace (Hidden & Inert Until Unlocked) -->
+    <main id="main-workspace" class="studio-workspace" tabindex="-1" hidden inert>
+      <!-- Left: Document Stage -->
+      <section class="doc-stage" aria-label="Document Editor and Inline Annotations">
+        <!-- Zero-Credit Missing-LO Pre-Review Gate Banner -->
+        <div id="missing-lo-banner" class="gate-banner" role="region" aria-labelledby="missing-lo-heading" hidden>
+          <div class="gate-banner__head">
+            <h2 class="gate-banner__title" id="missing-lo-heading">
+              Target Learning Objectives Required Before Scoring (0 Credits Spent)
+            </h2>
+            <button type="button" id="btn-close-gate" class="btn btn-xs" aria-label="Dismiss Missing Learning Objectives notice">
+              Close
+            </button>
+          </div>
+          <p class="gate-banner__body" id="missing-lo-message">
+            Assessment alignment and cognitive demand cannot be evaluated without target Learning Objectives. Choose how to supply them:
+          </p>
+          <div class="gate-banner__actions">
+            <button type="button" id="btn-gate-open-lo-box" class="btn btn-primary btn-xs">
+              Paste / Type Target LOs
+            </button>
+            <input type="file" id="lo-file-upload-input" accept=".md,.txt,.docx" hidden />
+            <button type="button" id="btn-gate-upload-lo" class="btn btn-xs">
+              Upload Companion LO File
+            </button>
+            <button type="button" id="btn-gate-draft-los" class="btn btn-xs">
+              Draft Candidate LOs from Quiz (Facilitator)
+            </button>
+          </div>
+        </div>
+
+        <!-- Staged Changes Apply Bar (ADR-0003) -->
+        <div id="staged-changes-bar" class="staged-bar" role="region" aria-label="Staged Document Fixes" hidden>
+          <span class="staged-bar__text" id="staged-bar-message">
+            0 accepted fixes staged for preview.
+          </span>
+          <div class="staged-bar__actions">
+            <button type="button" id="btn-clear-staged" class="btn btn-xs">Clear Staged</button>
+            <button type="button" id="btn-preview-apply" class="btn btn-emerald btn-xs">
+              Preview Diff &amp; Save New Version
+            </button>
+          </div>
+        </div>
+
+        <!-- Post-Apply Separate Recheck Bar (ADR-0003) -->
+        <div id="recheck-bar" class="staged-bar staged-bar--recheck" role="region" aria-label="Recheck Updated Version" hidden>
+          <span class="staged-bar__text" id="recheck-bar-message">
+            New version saved! Review, Apply, and Recheck stay under your control—click Recheck to update your /100 score.
+          </span>
+          <button type="button" id="btn-recheck-version" class="btn btn-primary btn-xs">
+            Recheck Current Version
+          </button>
+        </div>
+
+        <!-- Reference Learning Objectives Panel (Track 2) -->
+        <div id="lo-anchor-panel" class="lo-anchor-panel" hidden>
+          <div class="lo-anchor-panel__header">
+            <label for="linked-lo-textarea" class="lo-anchor-panel__label">
+              Target Learning Objectives (Alignment Anchor — Not Re-Scored on O1–O7)
+            </label>
+            <div class="lo-anchor-panel__btns">
+              <button
+                type="button"
+                id="btn-run-audit-from-lo"
+                class="btn btn-primary btn-xs"
+                hidden
+              >
+                Run AI Audit with These LOs
+              </button>
+              <button
+                type="button"
+                id="btn-toggle-lo-textarea"
+                class="btn btn-xs"
+                aria-expanded="true"
+                aria-controls="linked-lo-textarea"
+              >
+                Collapse Reference LOs
+              </button>
+            </div>
+          </div>
+          <textarea
+            id="linked-lo-textarea"
+            class="lo-anchor-textarea"
+            placeholder="Paste or type the module's target Learning Objectives here (e.g., - LO1: Diagnose violations of linear regression assumptions...)"
+          ></textarea>
+        </div>
+
+        <!-- Elevated Paper Document Sheet -->
+        <div class="paper-sheet" id="paper-dropzone">
+          <div class="sheet-toolbar">
+            <div class="sheet-toolbar__left">
+              <input
+                type="text"
+                id="doc-title-input"
+                class="doc-title-input"
+                aria-label="Document Title"
+                value="Untitled Document"
+              />
+              <div class="view-toggle" role="tablist" aria-label="Document View Mode">
+                <button
+                  type="button"
+                  id="tab-view-annotated"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="annotated-canvas"
+                  tabindex="-1"
+                >
+                  Annotated View
+                </button>
+                <button
+                  type="button"
+                  id="tab-view-edit"
+                  role="tab"
+                  aria-selected="true"
+                  aria-controls="editor-panel-wrap"
+                  tabindex="0"
+                >
+                  Edit / Paste Markdown
+                </button>
+              </div>
+            </div>
+
+            <div class="sheet-toolbar__right">
+              <label for="version-select" class="unit-tag">Version</label>
+              <select id="version-select" class="version-select" aria-label="Document Version History">
+                <option value="0">v1 · Initial Draft</option>
+              </select>
+              <button type="button" id="btn-export-md" class="btn btn-xs" title="Download current version as Markdown (.md)">
+                Export .md
+              </button>
+            </div>
+          </div>
+
+          <div class="dropzone-strip" id="dropzone-strip">
+            <span>
+              Drop a <strong>.docx</strong>, <strong>.md</strong>, or <strong>.txt</strong> file on this sheet, paste rich text from Google Docs, or explore a calibrated sample:
+            </span>
+            <select id="sample-picker" class="sample-select" aria-label="Load Calibrated Sample Document">
+              <option value="sample-lo-regression-ai">Sample 1 · Track 1 Learning Objectives</option>
+              <option value="sample-quiz-mixed-formats">Sample 2 · Track 2 Mixed Quiz (6 Items)</option>
+              <option value="sample-quiz-missing-los">Sample 3 · Missing-LO Pre-Gate Demo</option>
+            </select>
+          </div>
+
+          <!-- Editable Raw Markdown Tabpanel -->
+          <div
+            id="editor-panel-wrap"
+            role="tabpanel"
+            aria-labelledby="tab-view-edit"
+          >
+            <textarea
+              id="markdown-editor"
+              class="markdown-editor"
+              spellcheck="true"
+              aria-label="Document Markdown Content"
+            ></textarea>
+          </div>
+
+          <!-- Grammarly-Style Annotated Document Tabpanel -->
+          <article
+            id="annotated-canvas"
+            class="annotated-canvas"
+            role="tabpanel"
+            aria-labelledby="tab-view-annotated"
+            hidden
+          ></article>
+        </div>
+      </section>
+
+      <!-- Right: LE Agent Inspector & Score Rail -->
+      <aside class="inspector-rail" aria-label="LE Agent Score and Findings Inspector">
+        <div class="score-card" id="score-card-region" role="region" aria-label="Rubric Score Summary">
+          <div id="sr-score-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+          <div id="stale-version-banner" class="stale-version-banner" hidden>
+            <span>Showing score from prior version. Click <strong>Recheck</strong> to score your updated draft.</span>
+            <button type="button" id="btn-recheck-inline" class="btn btn-primary btn-xs">Recheck Now</button>
+          </div>
+
+          <div class="score-hero">
+            <div class="score-ring-wrap" aria-hidden="true">
+              <svg class="score-ring-svg" viewBox="0 0 84 84">
+                <circle class="score-ring-track" cx="42" cy="42" r="35"></circle>
+                <circle
+                  id="score-ring-fill"
+                  class="score-ring-fill"
+                  cx="42"
+                  cy="42"
+                  r="35"
+                  stroke-dasharray="219.91"
+                  stroke-dashoffset="219.91"
+                ></circle>
+              </svg>
+              <div class="score-ring-center">
+                <span id="score-ring-num" class="score-ring-num">—</span>
+                <span class="score-ring-denom">/ 100</span>
+              </div>
+            </div>
+
+            <div class="score-meta">
+              <span id="readiness-badge" class="status-chip status-chip--idle">
+                Click "Run AI Audit" to Score
+              </span>
+              <p id="score-split-line" class="score-split-line">
+                94 Visible pts + 6 Prior Knowledge (PK-1) pts
+              </p>
+              <div class="score-meta__actions">
+                <button type="button" id="btn-audit-pk" class="btn btn-xs">
+                  Audit Prior Knowledge (+6 pts)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p id="score-summary-text" class="score-summary">
+            Nothing runs automatically—upload or edit your draft on the left, then click <strong>Run AI Audit</strong> to compute a deterministic /100 score and inline annotations.
+          </p>
+
+          <div id="dimension-bars" class="dim-bars"></div>
+        </div>
+
+        <!-- Inspector Sub-Tabs (WAI-ARIA APG Tablist) -->
+        <div class="rail-tabs" role="tablist" aria-label="Inspector Views">
+          <button
+            type="button"
+            id="rail-tab-issues"
+            class="rail-tab"
+            data-rail-tab="issues"
+            role="tab"
+            aria-selected="true"
+            aria-controls="rail-tabpanel"
+            tabindex="0"
+          >
+            Findings (<span id="count-issues">0</span>)
+          </button>
+          <button
+            type="button"
+            id="rail-tab-rubric"
+            class="rail-tab"
+            data-rail-tab="rubric"
+            role="tab"
+            aria-selected="false"
+            aria-controls="rail-tabpanel"
+            tabindex="-1"
+          >
+            Checks
+          </button>
+          <button
+            type="button"
+            id="rail-tab-kc"
+            class="rail-tab"
+            data-rail-tab="kcs"
+            role="tab"
+            aria-selected="false"
+            aria-controls="rail-tabpanel"
+            tabindex="-1"
+          >
+            KLI KCs
+          </button>
+          <button
+            type="button"
+            id="rail-tab-pk"
+            class="rail-tab"
+            data-rail-tab="pk"
+            role="tab"
+            aria-selected="false"
+            aria-controls="rail-tabpanel"
+            tabindex="-1"
+          >
+            Prior Know. (+6)
+          </button>
+        </div>
+
+        <!-- Findings Filter & Bulk-Stage Toolbar (Shown on Findings tab after Audit) -->
+        <div id="findings-toolbar" class="findings-toolbar" hidden>
+          <div class="findings-filters" id="findings-filter-group" role="group" aria-label="Filter Findings"></div>
+          <div class="findings-bulk-row" id="findings-bulk-row" hidden>
+            <span class="findings-bulk-hint" id="findings-showing-count"></span>
+            <button type="button" id="btn-stage-all-fixes" class="btn btn-xs">
+              Stage All Auto-Fixes
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab Content Container -->
+        <div
+          id="rail-tabpanel"
+          role="tabpanel"
+          aria-labelledby="rail-tab-issues"
+          class="rail-tabpanel"
+        >
+          <div id="rail-content" class="findings-list">
+            <div class="empty-rail-state">
+              Ready when you are—upload a document or pick a calibrated sample, then click <strong>Run AI Audit</strong> in the top bar.
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Modal 1: Diff Preview -> Confirm Apply (ADR-0003) -->
+    <div
+      id="modal-diff"
+      class="modal-backdrop"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-diff-title"
+    >
+      <div class="modal-dialog" tabindex="-1">
+        <div class="modal-header">
+          <h2 id="modal-diff-title">Preview Changes Before Creating New Version</h2>
+          <button type="button" id="btn-close-diff-modal" class="btn btn-xs" aria-label="Cancel and close diff preview">
+            Cancel
+          </button>
+        </div>
+        <p class="modal-lead">
+          Applying accepted suggestions creates a new immutable document version (<strong>ADR-0003</strong>) without overwriting your earlier draft. You can switch back to any prior version at any time.
+        </p>
+        <div id="diff-preview-list" class="diff-preview-list"></div>
+        <div class="modal-footer-end">
+          <button type="button" id="btn-cancel-apply" class="btn">Keep Editing</button>
+          <button type="button" id="btn-confirm-apply" class="btn btn-emerald">
+            Confirm &amp; Save New Version
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: Provider-Agnostic Pilot LLM Connection & Zero-Leak Key Security -->
+    <div
+      id="modal-connection"
+      class="modal-backdrop"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-conn-title"
+    >
+      <div class="modal-dialog" tabindex="-1">
+        <div class="modal-header">
+          <h2 id="modal-conn-title">Link Pilot LLM (Gemini Default) &amp; Zero-Leak Security</h2>
+          <button type="button" id="btn-close-conn-modal" class="btn btn-xs" aria-label="Close LLM connection settings">
+            Close
+          </button>
+        </div>
+
+        <p class="modal-lead">
+          The Learning Engineer Agent rubric and scorer are <strong>100% LLM-independent</strong>, with <strong>Google Gemini (<code>gemini-2.5-flash</code>)</strong> pre-configured for pilot testing. Never commit an API key to client code—use Option A for shared pilot testing or Option B for instant solo testing right now.
+        </p>
+
+        <div class="field-group">
+          <label for="input-proxy-url">Option A (Shared Pilot Team) · Cloudflare Worker Proxy URL</label>
+          <input
+            type="url"
+            id="input-proxy-url"
+            placeholder="https://le-agent-llm-proxy.<your-subdomain>.workers.dev"
+          />
+          <p class="field-hint">
+            Your Pilot Access Passcode is forwarded automatically in <code>X-LE-Access-Code</code>, while your <code>GEMINI_API_KEY</code> stays encrypted on Cloudflare:
+          </p>
+          <pre class="code-block">cd proxy
+npx wrangler secret put GEMINI_API_KEY
+npx wrangler secret put SHARED_ACCESS_CODE
+npx wrangler deploy</pre>
+        </div>
+
+        <hr class="modal-divider" />
+
+        <div class="field-group">
+          <label for="select-ram-provider">Option B (Instant Solo Pilot Test) · LLM Provider</label>
+          <select id="select-ram-provider" class="modal-select">
+            <option value="gemini" selected>Google Gemini API (Pilot Default · gemini-2.5-flash)</option>
+            <option value="openai_compatible">OpenAI-Compatible API (OpenAI / OpenRouter / Custom)</option>
+          </select>
+        </div>
+
+        <div class="field-row-2">
+          <div class="field-group">
+            <label for="input-ram-model">Model ID</label>
+            <input type="text" id="input-ram-model" value="gemini-2.5-flash" />
+          </div>
+          <div class="field-group" id="group-ram-baseurl" hidden>
+            <label for="input-ram-baseurl">Base URL (OpenAI-Compatible)</label>
+            <input type="url" id="input-ram-baseurl" value="https://api.openai.com/v1" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="input-ram-key">Ephemeral RAM-Only API Key (Solo Browser Tab Test)</label>
+          <input
+            type="password"
+            id="input-ram-key"
+            autocomplete="off"
+            placeholder="Paste Gemini AIza... key (held in JS tab RAM only — never saved to disk)"
+          />
+          <p class="field-hint">
+            Held strictly in private JS closure memory for this tab and wiped the instant you click <em>Lock</em>, refresh, or close the tab.
+          </p>
+        </div>
+
+        <div class="modal-footer-split">
+          <button type="button" id="btn-clear-creds" class="btn btn-xs">
+            Clear Tab Key
+          </button>
+          <div class="modal-footer-end">
+            <a
+              href="https://github.com/gautamyadavs/learning-engineer-agent/blob/main/docs/llm-pilot-setup-guide.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-link-clean"
+            >
+              Step-by-Step Setup Guide
+            </a>
+            <button type="button" id="btn-save-conn" class="btn btn-primary">
+              Save Connection
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Non-Blocking Accessible Toast Region -->
+    <div id="toast-region" class="toast-region" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script type="module" src="./web/app.js"></script>
+  </body>
+</html>

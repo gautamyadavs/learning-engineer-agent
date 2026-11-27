@@ -1,0 +1,15 @@
+{
+  "name": "learning-engineer-agent",
+  "version": "0.3.2",
+  "private": true,
+  "type": "module",
+  "description": "Learning Engineer (LE) Agent — Password-Protected Annotation Studio, v0.3.2 100-point rubric, provider-agnostic LLM gateway (Gemini pilot), deterministic scoring engine, KLI KC scope check, and Prior Knowledge Audit",
+  "scripts": {
+    "sync:web": "node scripts/sync-browser-scorer.mjs",
+    "set-passcode": "node scripts/set-passcode.mjs",
+    "test": "node scripts/sync-browser-scorer.mjs && node --experimental-strip-types --test src/lib/le-scoring/scorer.test.ts"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

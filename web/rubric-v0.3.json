@@ -1,0 +1,962 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "rubric_version": "0.3.0",
+  "updated_at": "2026-11-25",
+  "credit_rule": {
+    "document_checks": "proportional_unit_credit",
+    "formula": "points_earned = points_available * (units_meeting / units_applicable)",
+    "assessment_question_distribution": "equal_1_over_N_per_question",
+    "assessment_question_formula": "Each of the N independently scored questions receives (format_budget / N) item-quality points and (format_feedback_budget / N) feedback points, earned proportionally across the applicable checks for that question's format. 'minor_risk' observations record unscored optional notes without deducting points.",
+    "conditional_dimension_renormalization": "When an entire conditional visible dimension (such as assessment_feedback on a secure credentialing/placement exam that intentionally withholds learner feedback per AS-07) is marked not_applicable, its budget renormalizes proportionally across the remaining active visible dimensions so visible points available always equal 94 (+ 6 PK-1 = 100).",
+    "prior_knowledge_check": "earned_when_all_triaged_gaps_resolved",
+    "max_prior_knowledge_items": 10
+  },
+  "objective_segmentation_rules": {
+    "leaf_lo": "Scored on O1-O6.",
+    "umbrella_header": "Container goal with child leaf_lo items beneath it; evaluated via its children rather than penalized for breadth on O1-O6 (coherence checked in O7).",
+    "author_kc": "Pre-existing author-written Knowledge Components (e.g., KC 1.1); imported directly into KLI KC reconciliation as author_authored and checked for coherence/inversion in O7.",
+    "orientation_note": "Non-LO preview or context prose placed inside an Objectives block; excluded from O1-O6 units and flagged solely under C1."
+  },
+  "assessment_segmentation_and_calibration_rules": {
+    "mtf_and_yes_no_matrices": "Multiple True-False (MTF) and OLI Yes/No matrix items (e.g., LBD_TAF) route to 'multi_input' rather than 'cata', rewarding statement-level verification per Brassil & Couch (2019) without triggering CATA-01 penalties.",
+    "mixed_formative_summative_pools": "Authoring documents mixing Formative (LBD/DIGT/F) and Summative (Quiz/Checkpoint/S) items evaluate retry/answer-release timing (FB-S1) against each item's stated role, and flag cross-item answer leakage when shared-stimulus items reveal a sibling item's key in distractor feedback.",
+    "substantive_feedback_accuracy": "Feedback checks (FB-M2/M3, FB-O1, FB-N1, FB-T1, FB-R1, FB-I1) require substantively accurate domain/framework explanations; inverted definitions or option-to-feedback mismatches fail and consolidate with S3 to avoid double-penalizing one root error.",
+    "missing_item_lo_tags_vs_alignment": "When module LOs exist and item content aligns (A1 passes) but individual item LO/Skill tag cells are left blank, deduct under C1 (instrumentation traceability) rather than A1; ignore Google Docs '1. 1. 1.' table-cell numbering export artifacts.",
+    "external_unattached_rubrics": "When an open-ended prompt links to an external folder/URL for its rubric rather than including or attaching it in Workspace, mark S3 and OE-06..10 'unverified' (0 pts earned, prompting attachment) rather than inventing critiques of unseen criteria."
+  },
+  "status_note": "Track 1 (objectives_only, calibrated 2026-11-21) and Track 2 (assessment_quiz, calibrated 2026-11-25 across 7 item formats + dedicated 14-pt Learner Feedback dimension + 3 Drive courses) reviewed and locked by Gautam. Cross-track Prior Knowledge Audit (PK-1 = 6 pts) active across all 4 tracks. Tracks 3-4 remain provisional pending item-by-item review.",
+  "ready_threshold": {
+    "score_min": 80,
+    "require_lo_context": true,
+    "require_zero_missing_expected_blocks": true,
+    "require_defensible_s3_keys": true,
+    "note": "Visible checks total 94 pts on every track, so strong visible work can reach Ready (>=80) before running Prior Knowledge Audit (+6 pts). On tracks with scored assessments (S3), Ready also requires zero wrong or unverified answer keys/rubrics."
+  },
+  "question_formats": {
+    "mcq": {
+      "label": "Multiple-Choice (Single-Select)",
+      "aliases": ["single_select", "lbd_mcq", "digt_mcq", "true_false"],
+      "item_check_ids": [
+        "IWF-01", "IWF-02", "IWF-03", "IWF-04", "IWF-05", "IWF-06", "IWF-07",
+        "IWF-08", "IWF-09", "IWF-10", "IWF-11", "IWF-12", "IWF-13", "IWF-14",
+        "IWF-15", "IWF-16", "IWF-17", "IWF-18", "IWF-19"
+      ],
+      "feedback_check_ids": ["FB-M1", "FB-M2", "FB-M3", "FB-M4"]
+    },
+    "open_ended": {
+      "label": "Open-Ended (Paragraph, Essay, Case, Design/Code Artifact)",
+      "aliases": ["essay", "paragraph", "constructed_response", "case_analysis"],
+      "item_check_ids": [
+        "OE-01", "OE-02", "OE-03", "OE-04", "OE-05", "OE-06",
+        "OE-07", "OE-08", "OE-09", "OE-10", "OE-11"
+      ],
+      "feedback_check_ids": ["FB-O1", "FB-O2", "FB-O3", "FB-O4"]
+    },
+    "cata": {
+      "label": "Check All That Apply (Multiple-Select)",
+      "aliases": ["sata", "multiple_select", "select_all_that_apply"],
+      "item_check_ids": [
+        "CATA-01", "CATA-02", "CATA-03", "CATA-04",
+        "IWF-01", "IWF-02", "IWF-04", "IWF-05", "IWF-06", "IWF-10",
+        "IWF-11", "IWF-12", "IWF-13", "IWF-15", "IWF-17", "IWF-19"
+      ],
+      "feedback_check_ids": ["FB-C1", "FB-C2"]
+    },
+    "numeric_math": {
+      "label": "Numeric & Symbolic Math Single-Input",
+      "aliases": ["numeric", "number", "math", "symbolic_math", "formula"],
+      "item_check_ids": ["NUM-01", "NUM-02", "NUM-03", "NUM-04", "NUM-05"],
+      "feedback_check_ids": ["FB-N1", "FB-N2", "FB-N3"]
+    },
+    "short_text": {
+      "label": "Auto-Graded Short-Text / Fill-in-the-Blank",
+      "aliases": ["fill_in_the_blank", "fitb", "completion", "cloze_text"],
+      "item_check_ids": ["TXT-01", "TXT-02", "TXT-03", "TXT-04", "TXT-05"],
+      "feedback_check_ids": ["FB-T1", "FB-T2", "FB-T3"]
+    },
+    "ordering": {
+      "label": "Ordering / Sequencing & Parsons Problems",
+      "aliases": ["sequencing", "ranking", "parsons"],
+      "item_check_ids": ["ORD-01", "ORD-02", "ORD-03", "ORD-04", "ORD-05"],
+      "feedback_check_ids": ["FB-R1", "FB-R2", "FB-R3"]
+    },
+    "multi_input": {
+      "label": "Multi-Input, Dropdown Cloze, Yes/No MTF Matrix & Two-Tier Items",
+      "aliases": ["dropdown", "dropdown_cloze", "mtf", "lbd_taf", "yes_no_matrix", "two_tier", "matrix"],
+      "item_check_ids": ["MI-01", "MI-02", "MI-03", "MI-04"],
+      "feedback_check_ids": ["FB-I1", "FB-I2"]
+    }
+  },
+  "tracks": {
+    "objectives_only": {
+      "label": "Objectives only",
+      "review_status": "owner_reviewed_gautam_2026_11_21",
+      "lo_requirement": "inline_required",
+      "enable_kli_kc_enhancement": true,
+      "enable_prior_knowledge_audit": true,
+      "dimension_budgets": {
+        "objectives": 74,
+        "clarity": 20,
+        "prior_knowledge": 6
+      }
+    },
+    "assessment_quiz": {
+      "label": "Assessment / Quiz",
+      "review_status": "owner_reviewed_gautam_2026_11_25",
+      "lo_requirement": "inline_or_linked_reference",
+      "enable_kli_kc_enhancement": false,
+      "enable_prior_knowledge_audit": true,
+      "feedback_split": {
+        "set_level_share": 0.2857142857142857,
+        "question_level_share": 0.7142857142857143,
+        "note": "Of the 14-pt assessment_feedback budget, 4 pts evaluate set-level timing/focus (FB-S1..S2) and 10 pts distribute equally (10/N) across all N questions."
+      },
+      "dimension_budgets": {
+        "alignment": 20,
+        "assessment_shared": 14,
+        "assessment_format": 34,
+        "assessment_feedback": 14,
+        "clarity": 12,
+        "prior_knowledge": 6
+      }
+    },
+    "lesson_activity": {
+      "label": "Lesson / Activity page",
+      "review_status": "provisional_pending_track3_review",
+      "lo_requirement": "inline_or_linked_reference",
+      "enable_kli_kc_enhancement": false,
+      "enable_prior_knowledge_audit": true,
+      "dimension_budgets": {
+        "alignment": 28,
+        "practice_feedback": 42,
+        "clarity": 24,
+        "prior_knowledge": 6
+      }
+    },
+    "full_module": {
+      "label": "Full Module",
+      "review_status": "provisional_pending_track4_review",
+      "lo_requirement": "inline_or_linked_reference",
+      "enable_kli_kc_enhancement": true,
+      "enable_prior_knowledge_audit": true,
+      "feedback_split": {
+        "set_level_share": 0.2857142857142857,
+        "question_level_share": 0.7142857142857143
+      },
+      "dimension_budgets": {
+        "objectives": 14,
+        "alignment": 18,
+        "assessment_shared": 10,
+        "assessment_format": 24,
+        "assessment_feedback": 8,
+        "clarity": 10,
+        "practice_feedback": 10,
+        "prior_knowledge": 6
+      }
+    }
+  },
+  "checks": [
+    {
+      "id": "O1",
+      "dimension": "objectives",
+      "base_points": 10,
+      "unit_type": "objective",
+      "label": "Learner-centered framing",
+      "sources": ["LO1", "LLSS-LO-1", "ABCD-A"],
+      "earn_when": "Stated in terms of what the learner will achieve rather than what the instructor/course covers or mere activity completion.",
+      "boundary": "Shared header stem ('Students will be able to...') satisfies framing without repeating boilerplate on every bullet.",
+      "conditional_na": false
+    },
+    {
+      "id": "O2",
+      "dimension": "objectives",
+      "base_points": 14,
+      "unit_type": "objective",
+      "label": "Observable Bloom's action verb",
+      "sources": ["LO1", "LLSS-LO-2", "ABCD-B", "EdDesign-Step2"],
+      "earn_when": "Uses an observable action verb matched to the intended cognitive or metacognitive operation (avoiding understand, know, learn about, appreciate, become aware of, review, consider, enhance ability to).",
+      "boundary": "Evaluate cognitive/metacognitive demand from verb + object together. Do not force cognitive Bloom verbs onto intentional dispositional/community-norm goals ('Demonstrate openness to peer feedback'); verify their observable behavioral indicators under O4.",
+      "conditional_na": false
+    },
+    {
+      "id": "O3",
+      "dimension": "objectives",
+      "base_points": 14,
+      "unit_type": "objective",
+      "label": "Specific content & single-target granularity",
+      "sources": ["LO1", "LLSS2-Slides-43-52", "Reworking-LOs"],
+      "earn_when": "Names the specific concept, method, or object acted on at an assessable grain size without bundling separable 'A and B' capabilities or 10+ concept laundry lists into one objective.",
+      "boundary": "Inseparable coupled judgments ('select and justify a policy') pass; intentional UDL/multi-track disjunctions ('implement or trace a prototype') pass O3 and route condition clarity to O5; separable 'A and B' compounds split.",
+      "conditional_na": false
+    },
+    {
+      "id": "O4",
+      "dimension": "objectives",
+      "base_points": 12,
+      "unit_type": "objective",
+      "label": "Identifiable evidence of mastery & worthwhile purpose",
+      "sources": ["LO2", "LO7", "LLSS-LO-3", "EdDesign-Step2"],
+      "earn_when": "A plausible learner demonstration (including behavioral indicators for dispositional goals) distinguishes genuine mastery from weak proxies (attendance/clicks) and serves an identifiable educational purpose.",
+      "boundary": "No ABCD numeric degree ('80% accuracy') or completed exam required. Do not double-deduct when O1-O3 already capture the ambiguity.",
+      "conditional_na": false
+    },
+    {
+      "id": "O5",
+      "dimension": "objectives",
+      "base_points": 8,
+      "unit_type": "objective",
+      "label": "Material performance conditions",
+      "sources": ["LO5", "ABCD-C"],
+      "earn_when": "Tools, aids/AI, resources, quantitative-vs-qualitative mode, or dual-track selection rules ('implement or trace') are explicit when they materially change the capability being claimed.",
+      "boundary": "Passes automatically when no special condition alters the target; never require artificial 'Given a lecture...' filler.",
+      "conditional_na": true
+    },
+    {
+      "id": "O6",
+      "dimension": "objectives",
+      "base_points": 6,
+      "unit_type": "objective",
+      "label": "Target-faithful expression (ends vs. means)",
+      "sources": ["LO6", "CORE-07", "CAST-UDL"],
+      "earn_when": "Avoids locking in incidental response formats, media, or tools unless they are part of the target competency; honors legitimate UDL 'A or B' expression alternatives.",
+      "boundary": "Preserve writing, speaking, or coding in a specific language when that is the intended skill.",
+      "conditional_na": false
+    },
+    {
+      "id": "O7",
+      "dimension": "objectives",
+      "base_points": 10,
+      "unit_type": "objective_set",
+      "label": "Coherent & non-redundant goal set",
+      "sources": ["LO4", "LLSS2-Slides-25-33"],
+      "earn_when": "Parent goals, sub-objectives, and any author-written KCs connect coherently without major missing sub-KCs, level inversions, duplicates, or trivial tool-task bloat.",
+      "boundary": "Use cognitive/metacognitive/dispositional lenses only as holistic gap prompts (never require 6 category labels). Mark not_applicable for a single standalone LO.",
+      "conditional_na": true
+    },
+    {
+      "id": "PK-1",
+      "alias_ids": ["O8"],
+      "dimension": "prior_knowledge",
+      "base_points": 6,
+      "unit_type": "prior_knowledge_audit",
+      "label": "Prior knowledge audited & gaps addressed",
+      "sources": ["LO3", "CORE-01", "CP-04", "ADR-0008"],
+      "earn_when": "Educator runs Audit Prior Knowledge (capped at 5-10 highest-risk items, seeded with 'prerequisite' KCs and suppressing 'out_of_scope' KCs), triages all items (have / not_needed / some_lack / most_lack; batch 'Mark rest Have' supported), and resolves all flagged gaps via Path A, B, or C.",
+      "boundary": "No timeframe guessing. Zero-gap triage awards +6 pts immediately with no extra LLM call.",
+      "conditional_na": false
+    },
+    {
+      "id": "C1",
+      "dimension": "clarity",
+      "base_points": 5,
+      "unit_type": "section",
+      "label": "Locatable action, deliverable & clear IDs/LO tags",
+      "sources": ["LO6", "CP-05", "LLSS3-Slides-6-8", "LO-Revamp"],
+      "earn_when": "Objectives, questions, or deliverables are separated from non-LO prose and carry clear IDs and target LO/KC tags for alignment traceability.",
+      "boundary": "Do not penalize Markdown converter artifacts (such as nested Google Docs lists or table choices exporting as repeated '1.'). Missing item-level LO tags when module LOs exist deduct here rather than A1.",
+      "conditional_na": false
+    },
+    {
+      "id": "C2",
+      "dimension": "clarity",
+      "base_points": 5,
+      "unit_type": "section",
+      "label": "Unambiguous references & consistent terms",
+      "sources": ["CP-02", "CP-05"],
+      "earn_when": "Pronouns, labels, and cross-references have one clear referent, and domain concepts use consistent terminology.",
+      "boundary": "Preserve intentional synonyms when explicitly introduced.",
+      "conditional_na": false
+    },
+    {
+      "id": "C3",
+      "dimension": "clarity",
+      "base_points": 5,
+      "unit_type": "section",
+      "label": "Accessible phrasing (jargon & syntax)",
+      "sources": ["CP-05", "CP-07"],
+      "earn_when": "Unnecessarily tangled syntax and incidental idioms are simplified and non-target jargon is explained for multilingual and ADHD readers.",
+      "boundary": "Preserve necessary disciplinary vocabulary and intended intellectual demand.",
+      "conditional_na": false
+    },
+    {
+      "id": "C4",
+      "dimension": "clarity",
+      "base_points": 5,
+      "unit_type": "section",
+      "label": "Followable sequence & dependencies",
+      "sources": ["CP-04", "CP-05"],
+      "earn_when": "Foundational prerequisites, steps, and question progressions appear in an order learners/readers can follow without backtracking.",
+      "boundary": "Mark not_applicable for a single standalone item or genuinely parallel items.",
+      "conditional_na": true
+    },
+    {
+      "id": "C5",
+      "dimension": "clarity",
+      "base_points": 5,
+      "unit_type": "section",
+      "label": "Locatable constraints, resources & submission details",
+      "sources": ["CP-04", "CP-07", "AS-08"],
+      "earn_when": "Referenced datasets, tools, time/attempt rules, constraints, and submission expectations are labeled near where they are needed.",
+      "boundary": "Mark not_applicable on pure LO lists or formative item banks without external submission constraints.",
+      "conditional_na": true
+    },
+    {
+      "id": "A1",
+      "dimension": "alignment",
+      "base_points": 5,
+      "unit_type": "alignment_pair",
+      "label": "Content and scope match target LOs",
+      "sources": ["LO8", "AS-01", "LLSS-AS-1"],
+      "earn_when": "Questions and tasks target in-scope content/KCs of the stated LOs rather than unrelated trivia.",
+      "boundary": "Flag unverified (0 pts) if the referenced LO is instructor-centered or too vague to establish target content.",
+      "conditional_na": false
+    },
+    {
+      "id": "A2",
+      "dimension": "alignment",
+      "base_points": 7,
+      "unit_type": "alignment_pair",
+      "label": "Tasks elicit the intended cognitive operation",
+      "sources": ["LO8", "AS-02", "Nov-2026-MCQ-Guide", "Koedinger-2023"],
+      "earn_when": "Assessment demands elicit the cognitive operation claimed by the LO rather than a lower-level definition/recall substitute.",
+      "boundary": "Judge actual task demands rather than literal verb matching. Selected-response items (MCQs) can test discrimination, debugging, or decision selection, not full authoring/coding implementation; flag modality-claim gaps when an LO claims implementation and only MCQs exist.",
+      "conditional_na": false
+    },
+    {
+      "id": "A3",
+      "dimension": "alignment",
+      "base_points": 4,
+      "unit_type": "alignment_pair",
+      "label": "Instruction prepares learners for assessed demands",
+      "sources": ["CORE-04", "CP-01"],
+      "earn_when": "Instructional explanations and practice prepare learners for the content and operations later assessed.",
+      "boundary": "Mark not_applicable in standalone assessment_quiz reviews where instructional pages are not part of the submission.",
+      "conditional_na": true,
+      "default_na_tracks": ["assessment_quiz"]
+    },
+    {
+      "id": "A4",
+      "dimension": "alignment",
+      "base_points": 3,
+      "unit_type": "alignment_pair",
+      "label": "Performance & assistance conditions match the claim",
+      "sources": ["LO5", "AS-08", "Bastani-2025"],
+      "earn_when": "Permitted tools, calculators, AI/notes, and independence match the conditions claimed by the LO.",
+      "boundary": "Assisted performance (e.g., permitting ChatGPT when LO5 specifies 'without using another AI tool') fails A4. Mark not_applicable when neither the LO nor the quiz implies special tool/aid conditions.",
+      "conditional_na": true
+    },
+    {
+      "id": "A5",
+      "dimension": "alignment",
+      "base_points": 5,
+      "unit_type": "alignment_pair",
+      "label": "Credit & evaluation reflect intended capability",
+      "sources": ["CORE-05", "AS-04"],
+      "earn_when": "Keys or scoring rules award credit for demonstrating the target capability rather than incidental surface features, speed, or trick wording.",
+      "boundary": "Mark not_applicable on lesson_activity pages with no scored evaluation.",
+      "conditional_na": true
+    },
+    {
+      "id": "S1",
+      "dimension": "assessment_shared",
+      "base_points": 3,
+      "unit_type": "assessment_set",
+      "label": "Identifiable assessment purpose & stakes",
+      "sources": ["AS-01", "LLSS3-Slide-15", "EdDesign-Step3"],
+      "earn_when": "Diagnostic, formative (practice/LBD/DIGT), or summative (Quiz/Checkpoint) purpose is identifiable at the set or item level.",
+      "boundary": "Supports mixed authoring banks tagging items individually as Formative (F) vs. Summative (S).",
+      "conditional_na": false
+    },
+    {
+      "id": "S2",
+      "dimension": "assessment_shared",
+      "base_points": 3,
+      "unit_type": "assessment_set",
+      "label": "Sufficient domain sampling for the claim",
+      "sources": ["AS-03", "Mislevy-ECD-2003"],
+      "earn_when": "The item set samples across the target LOs/KCs rather than clustering repetitive near-identical items on a narrow slice while leaving core LOs unassessed.",
+      "boundary": "No fixed item-count quota; 1 integrated case/open task can sample multiple LOs.",
+      "conditional_na": false
+    },
+    {
+      "id": "S3",
+      "dimension": "assessment_shared",
+      "base_points": 4,
+      "unit_type": "question",
+      "label": "Substantively defensible keys or scoring guidance",
+      "sources": ["AS-04", "CP-02", "Nov-2026-MCQ-Guide"],
+      "earn_when": "Answer keys and scoring criteria are present (inline or attached) and verified as substantively accurate by independently solving each item.",
+      "boundary": "Missing or externally unattached answer keys/rubrics stay unverified (0 pts earned, kept in denominator). Flags SME confirmation needed on specialized domain disputes.",
+      "conditional_na": false
+    },
+    {
+      "id": "S4",
+      "dimension": "assessment_shared",
+      "base_points": 2,
+      "unit_type": "question",
+      "label": "Fair access to required stimuli & construct fidelity",
+      "sources": ["AS-06", "CAST-UDL", "Testing-Standards-Ch3"],
+      "earn_when": "Referenced stimuli, tables, transcripts, and response conditions are supplied and free of construct-irrelevant cultural/idiom/sensory barriers.",
+      "boundary": "Preserve authentic disciplinary demands while removing incidental barriers or missing stimuli.",
+      "conditional_na": false
+    },
+    {
+      "id": "S5",
+      "dimension": "assessment_shared",
+      "base_points": 2,
+      "unit_type": "assessment_set",
+      "label": "Interpretation respects evidence limits",
+      "sources": ["AS-05", "Testing-Standards-Ch2", "MCQ-Coach"],
+      "earn_when": "High-stakes or mastery claims account for consequential limits of a single item, rater, or unpiloted instrument.",
+      "boundary": "Mark not_applicable on low-stakes formative practice; never require Cronbach's alpha or empirical discrimination indices without learner-response data.",
+      "conditional_na": true
+    },
+    {
+      "id": "FB-S1",
+      "dimension": "assessment_feedback_set",
+      "base_points": 2,
+      "unit_type": "assessment_set",
+      "label": "Purpose-matched feedback timing & answer-release policy",
+      "sources": ["AS-07", "AS-08", "Shute-2008", "Van-der-Kleij-2015", "Attali-2017"],
+      "earn_when": "Feedback timing fits item purpose (immediate guidance on formative practice; multi-try or graded items do not leak the final key on Attempt 1 or leak sibling-item keys across shared-stimulus items).",
+      "boundary": "Entire assessment_feedback dimension marks not_applicable only when S1 explicitly declares a secure credentialing/placement exam that withholds learner feedback.",
+      "conditional_na": true
+    },
+    {
+      "id": "FB-S2",
+      "dimension": "assessment_feedback_set",
+      "base_points": 2,
+      "unit_type": "assessment_set",
+      "label": "Task/process focus without self-praise or overclaimed diagnosis",
+      "sources": ["AS-07", "Hattie-Timperley-2007", "Kluger-DeNisi-1996", "Feedback-Audit-R4-R5"],
+      "earn_when": "Feedback addresses task features, underlying principles, or next steps rather than personal/self-level praise or criticism, and avoids asserting psychological certainty from a single response.",
+      "boundary": "Informative confirmation ('Correct — because...') is encouraged; empty self-praise ('You're a natural!') or demeaning tone fails.",
+      "conditional_na": true
+    },
+    {
+      "id": "FB-M1",
+      "dimension": "assessment_feedback_mcq",
+      "base_points": 1,
+      "unit_type": "mcq",
+      "label": "Elaborated beyond bare right/wrong verification",
+      "sources": ["Van-der-Kleij-2015", "LLSS-AS-5", "MCQ-Coach"],
+      "earn_when": "Provides explanatory feedback rather than no feedback, bare 'Correct/Incorrect' (KR), or bare letter reveal (KCR).",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-M2",
+      "dimension": "assessment_feedback_mcq",
+      "base_points": 1,
+      "unit_type": "mcq",
+      "label": "Substantively accurate key-principle reinforcement",
+      "sources": ["Butler-Karpicke-Roediger-2008", "LLSS3-Slide-23", "Mitrovic-2013"],
+      "earn_when": "Correct-option feedback accurately explains why the key holds under the stem's conditions, reinforcing low-confidence correct answers.",
+      "boundary": "Fails if the explanation states an inverted/inaccurate domain definition (consolidating root error with S3).",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-M3",
+      "dimension": "assessment_feedback_mcq",
+      "base_points": 1,
+      "unit_type": "mcq",
+      "label": "Option-specific distractor misconception repair",
+      "sources": ["Roediger-Marsh-2005", "LLSS3-Slides-22-26", "MCQ-Coach", "AS-07"],
+      "earn_when": "Each distractor's feedback accurately explains why that specific choice fails here (rather than copy-pasting the correct-answer text across all options), neutralizing negative suggestion.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-M4",
+      "dimension": "assessment_feedback_mcq",
+      "base_points": 1,
+      "unit_type": "mcq",
+      "label": "Non-spoiler strategy hint progression",
+      "sources": ["LLSS3-Slide-39", "Aleven-2016", "AS-07"],
+      "earn_when": "When hints are included, initial hints cue strategy or governing concepts before any bottom-out answer explanation.",
+      "boundary": "Mark not_applicable when hints are omitted (hints are optional per AS-07).",
+      "conditional_na": true
+    },
+    {
+      "id": "FB-O1",
+      "dimension": "assessment_feedback_oe",
+      "base_points": 1,
+      "unit_type": "open_ended",
+      "label": "Verifiable exemplar, anchor, or concise model checklist",
+      "sources": ["Sadler-1989", "Lipnevich-2014", "Shute-2008"],
+      "earn_when": "Supplies a concise model response, illustrative anchor, or self-check criteria list so learners/graders can calibrate free-text work without wall-of-text overload.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-O2",
+      "dimension": "assessment_feedback_oe",
+      "base_points": 1,
+      "unit_type": "open_ended",
+      "label": "Criterion-referenced gap diagnosis",
+      "sources": ["Hattie-Timperley-2007", "Wollenschlager-2016", "Brookhart-2018"],
+      "earn_when": "Feedback guidance (self-check, grader comment bank, or AI-feedback spec) links directly to observable OE-06 criteria rather than vague holistic labels.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-O3",
+      "dimension": "assessment_feedback_oe",
+      "base_points": 1,
+      "unit_type": "open_ended",
+      "label": "Actionable 'Where to Next' feed-forward",
+      "sources": ["Brooks-Hattie-2019", "Shute-2008", "AS-07"],
+      "earn_when": "Directs learners to a concrete revision check or next strategy without rewriting the student's work for them.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-O4",
+      "dimension": "assessment_feedback_oe",
+      "base_points": 1,
+      "unit_type": "open_ended",
+      "label": "Anticipated partial-work & valid alternative-path guidance",
+      "sources": ["AS-04", "AS-07", "OE-08", "OE-09"],
+      "earn_when": "Addresses common incomplete-reasoning patterns (e.g., claim without evidence) and honors equivalent valid approaches where OE-09 applies.",
+      "conditional_na": true
+    },
+    {
+      "id": "FB-C1",
+      "dimension": "assessment_feedback_cata",
+      "base_points": 1,
+      "unit_type": "cata",
+      "label": "Proposition-level diagnostic feedback per option",
+      "sources": ["LLSS3-Slide-28", "Brassil-Couch-2019", "Shute-2008"],
+      "earn_when": "Evaluates each checked and unchecked option individually so learners know which proposition failed rather than facing a dead-end combination 'Incorrect'.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-C2",
+      "dimension": "assessment_feedback_cata",
+      "base_points": 1,
+      "unit_type": "cata",
+      "label": "Non-spoiler evaluation-criteria hint",
+      "sources": ["LLSS3-Slide-39", "AS-07"],
+      "earn_when": "When hints are present, cues the decision criterion without revealing how many or which boxes to select.",
+      "boundary": "Mark not_applicable when hints are omitted.",
+      "conditional_na": true
+    },
+    {
+      "id": "FB-N1",
+      "dimension": "assessment_feedback_num",
+      "base_points": 1,
+      "unit_type": "numeric_math",
+      "label": "Concise step-structured worked derivation",
+      "sources": ["LLSS3-Slide-23", "McGuire-ASSISTments-2020", "Fyfe-2016", "Attali-2015"],
+      "earn_when": "Post-attempt/post-submission feedback shows the concise formula setup and substitution steps rather than a bare number or overwhelming prose wall.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-N2",
+      "dimension": "assessment_feedback_num",
+      "base_points": 1,
+      "unit_type": "numeric_math",
+      "label": "Targeted buggy-value misconception branches",
+      "sources": ["LLSS3-Slide-32", "Brown-Burton-1978", "Koedinger-Corbett-2006", "Sangwin-STACK-2013"],
+      "earn_when": "Defines targeted diagnostic feedback for primary predictable calculation errors (unit omission, sign flip, wrong formula parameter) rather than one catch-all 'Incorrect'.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-N3",
+      "dimension": "assessment_feedback_num",
+      "base_points": 1,
+      "unit_type": "numeric_math",
+      "label": "Non-spoiler setup/formula hint",
+      "sources": ["LLSS3-Slide-39", "AS-07"],
+      "earn_when": "When hints are present, cues the governing principle, variable mapping, or unit conversion prior to arithmetic substitution.",
+      "boundary": "Mark not_applicable when hints are omitted.",
+      "conditional_na": true
+    },
+    {
+      "id": "FB-T1",
+      "dimension": "assessment_feedback_txt",
+      "base_points": 1,
+      "unit_type": "short_text",
+      "label": "Canonical term + conceptual explanation",
+      "sources": ["LLSS3-Slide-23", "Shute-2008"],
+      "earn_when": "Explains why the target concept/term fits the prompt rather than revealing a bare word alone.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-T2",
+      "dimension": "assessment_feedback_txt",
+      "base_points": 1,
+      "unit_type": "short_text",
+      "label": "Near-miss / confusable-foil error branches",
+      "sources": ["Jordan-Mitchell-2009", "LLSS3-Slide-32"],
+      "earn_when": "Provides contrastive feedback for predictable confusable terms (e.g., osmosis vs. diffusion) rather than a generic 'Incorrect' only.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-T3",
+      "dimension": "assessment_feedback_txt",
+      "base_points": 1,
+      "unit_type": "short_text",
+      "label": "Non-spoiler conceptual hint",
+      "sources": ["LLSS3-Slide-39", "AS-07"],
+      "earn_when": "When hints are present, cues the defining mechanism/category rather than trivial letter-count clues unless pure lexical recall is targeted.",
+      "boundary": "Mark not_applicable when hints are omitted.",
+      "conditional_na": true
+    },
+    {
+      "id": "FB-R1",
+      "dimension": "assessment_feedback_ord",
+      "base_points": 1,
+      "unit_type": "ordering",
+      "label": "Causal / precondition rationale for sequence",
+      "sources": ["LLSS3-Slide-23", "Shute-2008"],
+      "earn_when": "Explains why key preconditions require earlier steps to precede dependent steps rather than displaying bare numbers '1, 2, 3, 4'.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-R2",
+      "dimension": "assessment_feedback_ord",
+      "base_points": 1,
+      "unit_type": "ordering",
+      "label": "Violated-dependency / out-of-order transition diagnosis",
+      "sources": ["LLSS3-Slide-30", "Ericson-2022"],
+      "earn_when": "Pinpoints which dependency or pair order broke rather than returning a binary 'Wrong order' message.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-R3",
+      "dimension": "assessment_feedback_ord",
+      "base_points": 1,
+      "unit_type": "ordering",
+      "label": "Subgoal / precondition hint",
+      "sources": ["Ericson-2022", "LLSS3-Slide-39"],
+      "earn_when": "When hints are present, cues subgoal phases or boundary preconditions without giving away exact step indices.",
+      "boundary": "Mark not_applicable when hints are omitted.",
+      "conditional_na": true
+    },
+    {
+      "id": "FB-I1",
+      "dimension": "assessment_feedback_mi",
+      "base_points": 1,
+      "unit_type": "multi_input",
+      "label": "Part-specific verification & misconception repair",
+      "sources": ["LLSS3-Slide-34", "Brassil-Couch-2019"],
+      "earn_when": "Identifies which specific part/row/dropdown passed or failed with part-level diagnostic explanation rather than a single opaque 'Partially correct / Incorrect'.",
+      "conditional_na": false
+    },
+    {
+      "id": "FB-I2",
+      "dimension": "assessment_feedback_mi",
+      "base_points": 1,
+      "unit_type": "multi_input",
+      "label": "Whole-task relationship / synthesis wrap-up",
+      "sources": ["Treagust-1988", "Hattie-Timperley-2007"],
+      "earn_when": "Connects how the sub-parts fit together (e.g., how Part b's evidence supports Part a's claim) when parts form a coupled system.",
+      "boundary": "Mark not_applicable on independent row-by-row Yes/No MTF checks where row-level feedback in FB-I1 is self-contained.",
+      "conditional_na": true
+    },
+    {
+      "id": "P1",
+      "dimension": "practice_feedback",
+      "base_points": 3,
+      "unit_type": "activity",
+      "label": "Opportunity to perform target operation",
+      "sources": ["CP-06", "CR-06"],
+      "earn_when": "Learners actively attempt the target cognitive operation before solutions are revealed.",
+      "boundary": "Topic coverage or passive reading alone does not satisfy practice when active generation is targeted.",
+      "conditional_na": false
+    },
+    {
+      "id": "P2",
+      "dimension": "practice_feedback",
+      "base_points": 2,
+      "unit_type": "activity",
+      "label": "Examples make key reasoning or steps visible",
+      "sources": ["CP-03", "CP-04"],
+      "earn_when": "Explanations and worked examples expose the underlying reasoning or decision criteria.",
+      "boundary": "No mandatory media/video quota.",
+      "conditional_na": true
+    },
+    {
+      "id": "P3",
+      "dimension": "practice_feedback",
+      "base_points": 2,
+      "unit_type": "activity",
+      "label": "Scaffolds preserve intended learner work",
+      "sources": ["CP-04", "CP-06"],
+      "earn_when": "Hints and scaffolds support progress at the point of need without giving away the target decision.",
+      "boundary": "No compulsory hints when unaided retrieval is intended.",
+      "conditional_na": true
+    },
+    {
+      "id": "P4",
+      "dimension": "practice_feedback",
+      "base_points": 3,
+      "unit_type": "activity",
+      "label": "Actionable feedback explains next steps",
+      "sources": ["AS-07", "CP-06"],
+      "earn_when": "Feedback explains why a response falls short and what to try next rather than bare right/wrong labels.",
+      "boundary": "Applies where formative learning support is intended.",
+      "conditional_na": true
+    },
+    { "id": "IWF-01", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Clear wording", "sources": ["MCQ-Coach"], "earn_when": "Stem and options avoid ambiguous double readings.", "conditional_na": false },
+    { "id": "IWF-02", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Plausible distractors", "sources": ["MCQ-Coach"], "earn_when": "Every distractor reflects a plausible error or near-boundary misconception rather than an obvious throwaway foil.", "conditional_na": false },
+    { "id": "IWF-03", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Content-bearing options", "sources": ["MCQ-Coach"], "earn_when": "Avoids 'none of the above' shortcuts where elimination alone yields credit.", "conditional_na": false },
+    { "id": "IWF-04", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Balanced key length and detail", "sources": ["MCQ-Coach"], "earn_when": "Correct option does not stand out by length or qualification detail.", "conditional_na": false },
+    { "id": "IWF-05", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Relevant stem information", "sources": ["MCQ-Coach"], "earn_when": "Stem omits extraneous reading load unrelated to the target judgment.", "conditional_na": false },
+    { "id": "IWF-06", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Comparable choices", "sources": ["MCQ-Coach"], "earn_when": "Alternatives address the same dimension or question.", "conditional_na": false },
+    { "id": "IWF-07", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "No convergence cues", "sources": ["MCQ-Coach"], "earn_when": "Key cannot be guessed by overlapping surface words across options.", "conditional_na": false },
+    { "id": "IWF-08", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "No logical or cross-item clues", "sources": ["MCQ-Coach"], "earn_when": "Mutually exclusive, subset, or shared-option sibling items do not give away the key.", "conditional_na": false },
+    { "id": "IWF-09", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Independent alternatives", "sources": ["MCQ-Coach"], "earn_when": "Avoids 'all of the above' where partial knowledge reveals the key.", "conditional_na": false },
+    { "id": "IWF-10", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Complete stem", "sources": ["MCQ-Coach"], "earn_when": "Core question is understandable before reading the options.", "conditional_na": false },
+    { "id": "IWF-11", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "No unjustified absolutes", "sources": ["MCQ-Coach"], "earn_when": "Avoids 'always'/'never' cues that allow testwise elimination.", "conditional_na": false },
+    { "id": "IWF-12", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "No stem-to-key word repetition", "sources": ["MCQ-Coach"], "earn_when": "Avoids incidental lexical echoes between stem and key.", "conditional_na": false },
+    { "id": "IWF-13", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Focused stem", "sources": ["MCQ-Coach"], "earn_when": "Stem poses one clear problem or decision.", "conditional_na": false },
+    { "id": "IWF-14", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Direct alternatives", "sources": ["MCQ-Coach"], "earn_when": "Avoids complex K-type combinations ('A and C only').", "conditional_na": false },
+    { "id": "IWF-15", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Grammar and parallel structure", "sources": ["MCQ-Coach"], "earn_when": "All options are grammatically parallel and fit the stem (ignoring Markdown '1. 1. 1.' table export artifacts).", "conditional_na": false },
+    { "id": "IWF-16", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Ordered numeric alternatives", "sources": ["MCQ-Coach"], "earn_when": "Numeric or range options appear in ascending or descending order.", "conditional_na": true },
+    { "id": "IWF-17", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Precise qualifiers", "sources": ["MCQ-Coach"], "earn_when": "Avoids vague frequency terms ('often', 'sometimes') when precision matters.", "conditional_na": false },
+    { "id": "IWF-18", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "One defensible answer", "sources": ["MCQ-Coach"], "earn_when": "Exactly one option is defensible under the stated conditions.", "conditional_na": false },
+    { "id": "IWF-19", "dimension": "assessment_mcq", "base_points": 1, "unit_type": "mcq", "label": "Positive or justified negative stem", "sources": ["MCQ-Coach"], "earn_when": "Avoids gratuitous or un-emphasized NOT/EXCEPT stems unless exception detection is the target (and emphasized clearly).", "conditional_na": false },
+    { "id": "OE-01", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Identifiable deliverable", "sources": ["AS-02"], "earn_when": "Learner can identify exactly what response or artifact to submit.", "conditional_na": false },
+    { "id": "OE-02", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Bounded question", "sources": ["AS-01", "AS-02"], "earn_when": "Specifies the claim, problem, or decision at a workable scope.", "conditional_na": false },
+    { "id": "OE-03", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Available stimulus", "sources": ["AS-02"], "earn_when": "Required case, dataset, or source text is supplied or linked.", "conditional_na": true },
+    { "id": "OE-04", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Reasoning elicited", "sources": ["AS-02"], "earn_when": "Prompt requires learners to expose the reasoning or evidence needed for the claim.", "conditional_na": false },
+    { "id": "OE-05", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Sufficient response space", "sources": ["AS-02", "AS-08"], "earn_when": "Length, time, and format constraints allow an adequate demonstration.", "conditional_na": true },
+    { "id": "OE-06", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Observable evaluation criteria", "sources": ["AS-04", "Brookhart-2018"], "earn_when": "Scoring criteria name inspectable features of the response rather than circular evaluative adjectives ('excellent insight').", "conditional_na": false },
+    { "id": "OE-07", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Adequate response described", "sources": ["AS-04"], "earn_when": "Scoring guide identifies minimum sufficient evidence or an illustrative anchor.", "conditional_na": false },
+    { "id": "OE-08", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Incomplete work interpretable", "sources": ["AS-04", "AS-05"], "earn_when": "Distinguishes partial or unsupported conclusions where partial credit applies.", "conditional_na": true },
+    { "id": "OE-09", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Legitimate alternatives accepted", "sources": ["AS-04", "AS-06"], "earn_when": "Allows equivalent defensible approaches where the target permits them.", "conditional_na": true },
+    { "id": "OE-10", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Consistent borderline rule", "sources": ["AS-04", "AS-05"], "earn_when": "Provides a usable decision rule for consequential borderline responses.", "conditional_na": true },
+    { "id": "OE-11", "dimension": "assessment_oe", "base_points": 1, "unit_type": "open_ended", "label": "Fair scoring of expression", "sources": ["AS-06"], "earn_when": "Grammar or style affects credit only when language mechanics are part of the target LO.", "conditional_na": false },
+    {
+      "id": "CATA-01",
+      "dimension": "assessment_cata",
+      "base_points": 1,
+      "unit_type": "cata",
+      "label": "Developmental & pedagogical fit (discourages early formative CATA)",
+      "sources": ["LLSS3-Slides-28-29", "Brassil-Couch-2019", "Couch-2018"],
+      "earn_when": "Used intentionally for advanced multi-cue synthesis or ungraded surveys rather than introductory formative skill-building (where Multiple True-False or focused single-select MCQs better isolate partial knowledge without combinatorial frustration).",
+      "conditional_na": false
+    },
+    {
+      "id": "CATA-02",
+      "dimension": "assessment_cata",
+      "base_points": 1,
+      "unit_type": "cata",
+      "label": "Explicit multi-select prompt cue",
+      "sources": ["LLSS3-Slide-29"],
+      "earn_when": "Prompt explicitly states 'Select all that apply' (or 'Select N') so learners never mistake checkboxes for single-select.",
+      "conditional_na": false
+    },
+    {
+      "id": "CATA-03",
+      "dimension": "assessment_cata",
+      "base_points": 1,
+      "unit_type": "cata",
+      "label": "Non-punitive partial-credit rule",
+      "sources": ["LLSS3-Slide-29", "Brassil-Couch-2019", "NCSBN-2023"],
+      "earn_when": "Awards option-level or zero-floored partial credit rather than harsh 0/1 all-or-nothing scoring (unless strict conjunction is explicitly justified for summative safety-critical mastery).",
+      "conditional_na": false
+    },
+    {
+      "id": "CATA-04",
+      "dimension": "assessment_cata",
+      "base_points": 1,
+      "unit_type": "cata",
+      "label": "Bounded option count (3-7) & zero meta-options",
+      "sources": ["LLSS3-Slide-29"],
+      "earn_when": "Contains 3-7 options to avoid working-memory overload and strictly omits 'All of the above' / 'None of the above'.",
+      "conditional_na": false
+    },
+    {
+      "id": "NUM-01",
+      "dimension": "assessment_num",
+      "base_points": 1,
+      "unit_type": "numeric_math",
+      "label": "Explicit target quantity, units & constants",
+      "sources": ["LLSS3-Slides-32-33", "Sangwin-STACK-2013", "AS-02"],
+      "earn_when": "Prompt and input box make required units (e.g., m/s, % vs. 0-1 proportion) and assumed physical/statistical constants unambiguous.",
+      "conditional_na": false
+    },
+    {
+      "id": "NUM-02",
+      "dimension": "assessment_num",
+      "base_points": 1,
+      "unit_type": "numeric_math",
+      "label": "Stated rounding precision & grading tolerance band",
+      "sources": ["LLSS3-Slide-32", "Sangwin-STACK-2013", "AS-04"],
+      "earn_when": "Non-exact numeric answers state expected rounding/sig-figs in the prompt and specify a grading tolerance band absorbing intermediate calculator rounding.",
+      "boundary": "Mark not_applicable for exact integer counts or pure symbolic expressions.",
+      "conditional_na": true
+    },
+    {
+      "id": "NUM-03",
+      "dimension": "assessment_num",
+      "base_points": 1,
+      "unit_type": "numeric_math",
+      "label": "Separated equivalence vs. required form",
+      "sources": ["Sangwin-STACK-2013", "Sangwin-2023", "AS-04"],
+      "earn_when": "Accepts mathematically equivalent forms (0.5, .5, 1/2; commuted/expanded algebra) when form is not in the LO, or separates algebraic equivalence from required-form checks (e.g., factored form) with partial credit/form feedback.",
+      "boundary": "Mark not_applicable when only a single integer representation exists.",
+      "conditional_na": true
+    },
+    {
+      "id": "NUM-04",
+      "dimension": "assessment_num",
+      "base_points": 1,
+      "unit_type": "numeric_math",
+      "label": "Construct-clean equation & notation entry syntax",
+      "sources": ["Sangwin-2010", "Gratwick-2020", "LLSS3-Slide-33", "AS-06"],
+      "earn_when": "Symbolic/formula/scientific-notation inputs supply explicit entry syntax examples or ungraded input validation so keyboard/mobile syntax friction does not masquerade as conceptual error.",
+      "boundary": "Mark not_applicable for plain scalar number entry.",
+      "conditional_na": true
+    },
+    {
+      "id": "NUM-05",
+      "dimension": "assessment_num",
+      "base_points": 1,
+      "unit_type": "numeric_math",
+      "label": "Manageable calculation chain (no hidden multi-step cliff)",
+      "sources": ["Ashton-2006", "PMC6788158", "AS-02", "AS-05"],
+      "earn_when": "Avoids grading 4+ chained calculations solely via one all-or-nothing final number without intermediate checkpoints or work capture when multi-step reasoning is claimed.",
+      "conditional_na": false
+    },
+    {
+      "id": "TXT-01",
+      "dimension": "assessment_txt",
+      "base_points": 1,
+      "unit_type": "short_text",
+      "label": "Determinate target & auto-gradable length (~1-5 words)",
+      "sources": ["Jordan-2012", "Mitchell-2002", "Nitko-Brookhart-2011", "LLSS3-Slide-33"],
+      "earn_when": "Constrains one unambiguous concept/term suitable for pattern/list matching (~1-5 words); multi-clause explanations route to open_ended.",
+      "conditional_na": false
+    },
+    {
+      "id": "TXT-02",
+      "dimension": "assessment_txt",
+      "base_points": 1,
+      "unit_type": "short_text",
+      "label": "Concept-focused direct question or end-blank placement",
+      "sources": ["Haladyna-2004", "Miller-Linn-Gronlund-2009"],
+      "earn_when": "Uses a direct question or places a single blank near the end of a clear sentence targeting a core concept (not trivial function words or Swiss-cheese sentences).",
+      "conditional_na": false
+    },
+    {
+      "id": "TXT-03",
+      "dimension": "assessment_txt",
+      "base_points": 1,
+      "unit_type": "short_text",
+      "label": "Synonym, acronym, inflection & format normalization",
+      "sources": ["Jordan-Mitchell-2009", "LLSS3-Slide-32", "AS-04"],
+      "earn_when": "Acceptance rules include valid synonyms, acronym/expanded pairs, singular/plural, hyphen/space, and case-insensitive matches.",
+      "conditional_na": false
+    },
+    {
+      "id": "TXT-04",
+      "dimension": "assessment_txt",
+      "base_points": 1,
+      "unit_type": "short_text",
+      "label": "Fair spelling/typo tolerance",
+      "sources": ["Horbach-2018", "LLSS3-Slide-32", "AS-06"],
+      "earn_when": "Tolerates minor spelling typos or states exact-orthography rules only when exact spelling/syntax (code keyword, L2 orthography, drug safety) is part of the target LO.",
+      "conditional_na": true
+    },
+    {
+      "id": "TXT-05",
+      "dimension": "assessment_txt",
+      "base_points": 1,
+      "unit_type": "short_text",
+      "label": "Zero grammatical (a/an) or box-length giveaways",
+      "sources": ["Nitko-Brookhart-2011", "LLSS3-Slide-27"],
+      "earn_when": "Surrounding articles ('a(n)'), verb agreement, and uniform input-box width avoid leaking or falsely excluding valid answers.",
+      "conditional_na": false
+    },
+    {
+      "id": "ORD-01",
+      "dimension": "assessment_ord",
+      "base_points": 1,
+      "unit_type": "ordering",
+      "label": "Genuine sequential, causal, or procedural construct fit",
+      "sources": ["LLSS3-Slides-30-31", "Haynes-Ericson-2021"],
+      "earn_when": "Targets an authentic chronological, procedural, causal, or algorithmic order rather than an arbitrary or idiosyncratic sequence.",
+      "conditional_na": false
+    },
+    {
+      "id": "ORD-02",
+      "dimension": "assessment_ord",
+      "base_points": 1,
+      "unit_type": "ordering",
+      "label": "Unique canonical order or commuting-step equivalence",
+      "sources": ["Denny-2008", "AS-04"],
+      "earn_when": "Preconditions uniquely fix one order, or grading accepts all valid topological orders when steps genuinely commute.",
+      "conditional_na": false
+    },
+    {
+      "id": "ORD-03",
+      "dimension": "assessment_ord",
+      "base_points": 1,
+      "unit_type": "ordering",
+      "label": "Bounded step count (3-7) & disciplined distractors",
+      "sources": ["Denny-2008", "Ericson-2019", "Ericson-2022", "Haynes-Magyar-2025"],
+      "earn_when": "Keeps elements within working memory (3-7 steps, or chunked with subgoals) and avoids unpaired jumbled distractor blocks in summative or early-novice items.",
+      "conditional_na": false
+    },
+    {
+      "id": "ORD-04",
+      "dimension": "assessment_ord",
+      "base_points": 1,
+      "unit_type": "ordering",
+      "label": "Relative-order partial credit (no index-shift cliff)",
+      "sources": ["Cliff-Keats-2002", "AS-04", "AS-05"],
+      "earn_when": "Awards credit for preserved pairwise/relative order so misplacing item #1 does not score 0 across all subsequent rightly ordered steps (unless strict all-or-nothing safety criticality is justified).",
+      "conditional_na": false
+    },
+    {
+      "id": "ORD-05",
+      "dimension": "assessment_ord",
+      "base_points": 1,
+      "unit_type": "ordering",
+      "label": "Zero transition giveaways & non-drag accessibility (WCAG 2.2 SC 2.5.7)",
+      "sources": ["WCAG22-2.5.7", "WCAG22-2.1.1", "LLSS3-Slide-30", "AS-06"],
+      "earn_when": "Step fragments omit accidental grammar/transition giveaways ('First,', 'Finally,') and support single-pointer click/select/rank + keyboard alternatives to drag-and-drop.",
+      "conditional_na": false
+    },
+    {
+      "id": "MI-01",
+      "dimension": "assessment_mi",
+      "base_points": 1,
+      "unit_type": "multi_input",
+      "label": "Coherent multi-part structure & bounded moving parts (2-6 inputs)",
+      "sources": ["LLSS3-Slide-34", "Sweller-2011"],
+      "earn_when": "Sub-inputs form one cohesive model, table, two-tier dyad, or Yes/No MTF matrix without Swiss-cheese paragraph overload.",
+      "conditional_na": false
+    },
+    {
+      "id": "MI-02",
+      "dimension": "assessment_mi",
+      "base_points": 1,
+      "unit_type": "multi_input",
+      "label": "Part-level partial credit & cascading-error ('hinged') protection",
+      "sources": ["Yen-1993-LID", "PMC6788158", "Treagust-1988", "NCSBN-2023", "Sangwin-STACK-2013"],
+      "earn_when": "Awards part/row-level partial credit (unless an explicit two-tier Claim + Reason dyad justifies linked credit) and prevents a Part (a) slip from auto-zeroing valid Part (b) reasoning.",
+      "conditional_na": false
+    },
+    {
+      "id": "MI-03",
+      "dimension": "assessment_mi",
+      "base_points": 1,
+      "unit_type": "multi_input",
+      "label": "Independent dropdown/choice lists (no cross-blank elimination)",
+      "sources": ["LLSS3-Slides-34-35", "IWF-06", "IWF-08", "IWF-15"],
+      "earn_when": "Dropdown or matrix options are grammatically parallel and plausible per slot without trivial word-bank leftover elimination.",
+      "boundary": "Mark not_applicable when sub-parts are purely numeric or text entry without option lists.",
+      "conditional_na": true
+    },
+    {
+      "id": "MI-04",
+      "dimension": "assessment_mi",
+      "base_points": 1,
+      "unit_type": "multi_input",
+      "label": "Explicit part/slot labels & assistive-technology clarity",
+      "sources": ["AS-06", "C1"],
+      "earn_when": "Every blank, dropdown, or matrix row has an unambiguous label so learners and screen readers can match each input to its prompt and feedback.",
+      "conditional_na": false
+    }
+  ]
+}

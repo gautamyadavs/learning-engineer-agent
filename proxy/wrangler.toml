@@ -1,0 +1,19 @@
+name = "le-agent-llm-proxy"
+main = "cloudflare-worker.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://gautamyadavs.github.io,http://localhost:8080,http://127.0.0.1:8080"
+LLM_PROVIDER = "gemini"
+LLM_MODEL = "gemini-2.5-flash"
+MAX_AUDITS_PER_IP_PER_HOUR = "20"
+MAX_DAILY_GLOBAL_AUDITS = "400"
+PAUSE_AUDITS = "false"
+
+# Provider-agnostic note:
+# - For Google Gemini pilot testing (default):
+#     npx wrangler secret put GEMINI_API_KEY
+#     npx wrangler secret put SHARED_ACCESS_CODE
+# - To switch later to any OpenAI-compatible provider (OpenAI, OpenRouter, Azure, vLLM):
+#     set LLM_PROVIDER = "openai_compatible", LLM_MODEL = "<model>", optional LLM_BASE_URL,
+#     and run: npx wrangler secret put LLM_API_KEY
