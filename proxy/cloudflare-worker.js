@@ -123,32 +123,34 @@ Return strict JSON: { "remediationMarkdown": "..." }`;
   if (action === 'draft_los') {
     return `You are the Learning Engineer (LE) Agent Facilitator.
 Infer 3 to 5 student-centered, observable Bloom's-verb Learning Objectives that capture the capabilities tested by the uploaded assessment.
+Include one shared header ('## Target Learning Objectives\\n\\nBy the end of this module, learners will be able to:') and start every bullet directly with a bold LO ID + capital action verb ('- **LO1:** Classify...'), NOT repeating 'Students will be able to' on each bullet.
 Avoid unobservable verbs ('understand', 'know', 'appreciate', 'learn about') and avoid bundling separable 'A and B' tasks.
-Return strict JSON: { "candidateLosMarkdown": "- **LO1:** ...\\n- **LO2:** ..." }`;
+Return strict JSON: { "candidateLosMarkdown": "## Target Learning Objectives\\n\\nBy the end of this module, learners will be able to:\\n- **LO1:** ...\\n- **LO2:** ..." }`;
   }
 
   if (track === 'objectives_only') {
     return `You are the Learning Engineer (LE) Agent Reviewer (Rubric v0.3.2 — Track 1: Objectives Only).
 Evaluate the uploaded Learning Objectives document strictly against:
-- O1 (Learner-centered framing; shared 'Students will be able to' stem passes)
-- O2 (Observable Bloom's action verb; flag understand/know/learn about/appreciate/consider/enhance ability; intentional dispositional norms pass O2 and verify behavioral indicators in O4)
-- O3 (Specific content & single-target granularity; split separable 'A and B' compounds and 10+ concept laundry lists; allow inseparable 'select and justify' and UDL 'implement or trace')
-- O4 (Identifiable evidence of mastery & worthwhile purpose; no '80% accuracy' ABCD degree required)
-- O5 (Material performance conditions — tools/AI/quant-vs-qual/dual-track explicit when they alter the skill; mark not_applicable or pass when no special condition applies)
-- O6 (Target-faithful expression — ends vs. means; honor UDL 'A or B')
-- O7 (Set-level coherence on unit 'set-1' — no missing sub-KCs, level inversions, or duplicates; mark not_applicable if only 1 LO)
-- C1..C5 on unit 'sec-1' (C1 clear IDs & separation of non-LO orientation notes, ignoring Markdown '1.' export quirks; C2 unambiguous references; C3 accessible phrasing; C4 sequence; C5 external constraints, mark not_applicable on pure LO lists).
+- O1: Learner-centered framing (shared 'Students/learners will be able to' stem passes; flag instructor/course coverage phrasing)
+- O2: Observable Bloom's action verb (flag understand/know/learn about/appreciate/consider/enhance ability; intentional dispositional clinical/ethical norms WITH observable behavioral indicators pass O2 and O4)
+- O3: Specific content & single-target granularity (split separable multi-verb 'A, B, and C' compounds; allow coupled 'select and justify' and UDL 'implement or trace'). When splitting a bulleted LO in 'replacement', quote the FULL bullet line including '- **LO X:**' and format every split line as a proper bulleted LO ('- **LO 1.2a:** ...\\n- **LO 1.2b:** ...').
+- O4: Identifiable evidence of mastery & worthwhile purpose (no '80% accuracy' ABCD degree required; DO NOT double-deduct O4 on an LO that already fails O1 or O2 unless it tracks pure attendance/click completion)
+- O5: Material performance conditions (tools/AI/quant-vs-qual/dual-track explicit when they alter the skill; pass or mark not_applicable when standard)
+- O6: Target-faithful expression (ends vs. means; honor UDL 'A or B')
+- O7: Set-level coherence on unit 'set-1' (flag duplicate LOs, missing foundational steps, or numbering/hierarchy gaps — quote the specific header/line from the doc when possible)
+- C1..C5 on unit 'sec-1':
+  - C1: Locatable action, clear IDs, and separation of non-LO orientation/logistics notes (e.g., 'Read Chapter 4 before lab' mixed inside Objectives MUST be excluded from leaf LOs and flagged as 'revise' under C1 quoting that exact sentence!)
+  - C2: Unambiguous references & consistent terms
+  - C3: Accessible phrasing
+  - C4: Followable sequence
+  - C5: External constraints (mark 'not_applicable' on pure LO lists).
 
-4-Way Block Segmentation:
-Classify items into 'leaf_lo' (scored on O1-O6), 'umbrella_header' (container goal with child LOs; do not penalize on O1-O6), 'author_kc' (author-written KC X.Y), or 'orientation_note' (non-LO prose inside Objectives block; exclude from O1-O6 and flag under C1).
-
-CRITICAL: Every finding 'quote' MUST be an EXACT verbatim substring copied character-for-character from the document so inline Grammarly-style highlighting anchors cleanly.
+CRITICAL: Every finding 'quote' MUST be an EXACT verbatim substring copied character-for-character from the document. Every leaf LO in results[] MUST list all passing checks from [O1,O2,O3,O4,O5,O6] in 'met' and any failing/na checks in 'findings'.
 Also extract 3-6 KLI Knowledge Components (fact | skill | principle) in kc_candidates (0 score impact).
 
-Return strict JSON matching:
+Return strict JSON:
 {
   "summary": "2-sentence constructive synthesis of strengths and highest-leverage fixes.",
-  "objective_blocks": [{ "id": "lo-1", "text": "...", "role": "leaf_lo" }],
   "results": [
     {
       "unit": "lo-1",
@@ -160,13 +162,13 @@ Return strict JSON matching:
           "status": "revise",
           "quote": "Exact verbatim substring from document",
           "principle": "O2 · Observable Bloom's action verb",
-          "reason": "Clear Principle -> Relevance -> Rationale explanation of the issue and its assessment impact.",
-          "replacement": "Drop-in replacement text for the quoted span"
+          "reason": "Clear Principle -> Relevance -> Rationale explanation.",
+          "replacement": "Drop-in replacement text preserving bullet formatting"
         }
       ]
     },
     { "unit": "set-1", "label": "Objective Set", "met": ["O7"], "findings": [] },
-    { "unit": "sec-1", "label": "Document Clarity", "met": ["C1", "C2", "C3", "C4"], "findings": [{ "check": "C5", "status": "not_applicable", "reason": "Pure LO specification." }] }
+    { "unit": "sec-1", "label": "Document Clarity", "met": ["C2", "C3", "C4"], "findings": [{ "check": "C5", "status": "not_applicable", "reason": "Pure LO specification." }] }
   ],
   "kc_candidates": [
     {
@@ -175,7 +177,7 @@ Return strict JSON matching:
       "statement": "Concise Knowledge Component",
       "kliType": "skill",
       "origin": "ai_proposed",
-      "impliedByLoQuote": "Exact verbatim substring if potentially out of scope",
+      "impliedByLoQuote": "Exact verbatim substring",
       "suggestedTrimmedLoIfOutOfScope": "Optional narrowed LO wording"
     }
   ]
@@ -184,31 +186,36 @@ Return strict JSON matching:
 
   return `You are the Learning Engineer (LE) Agent Reviewer (Rubric v0.3.2 — Track 2: Assessment / Quiz).
 Evaluate the uploaded Assessment against its target Learning Objectives using Rubric v0.3.2:
-1. Alignment per question ('p-<questionId>' units in results[]):
-   - A1 (Content & scope match target LOs; mark 'unverified' if referenced LO is unobservable/instructor-centered)
-   - A2 (Tasks elicit intended cognitive operation; MCQs can test discrimination/decisions, NOT full authoring/coding implementation)
-   - A4 (Permitted tools/AI/independence match LO conditions; mark 'not_applicable' if no special aid rule)
-   - A5 (Credit & scoring reflect target capability). Note: A3 is automatically not_applicable in standalone quizzes.
-2. Shared Assessment & Set-Level Feedback on unit 'set-1':
-   - S1 (Identifiable diagnostic/formative/summative purpose; supports mixed F/S banks)
-   - S2 (Sufficient domain sampling across LOs without rigid item-count quotas)
-   - S5 (Score interpretation limits; mark 'not_applicable' on formative/design drafts; never demand Cronbach's alpha without learner data)
-   - FB-S1 (Feedback timing fits purpose; no Attempt-1 key spoilers on multi-try/graded items or cross-item key leakage)
-   - FB-S2 (Task/process focus; no self-level praise or overclaimed psychological diagnosis).
-3. Document Clarity on unit 'sec-1': C1..C5 (C1 checks clear question IDs & LO tags, ignoring '1. 1. 1.' export quirks; C5 conditional).
-4. Per-Question Evaluation in questions[] (equal 1/N weight across all N questions):
-   - Every question MUST evaluate S3 (substantively solve & verify answer key/rubric; missing/external rubrics = 'unverified'; wrong keys = 'revise') and S4 (fair access to stimuli & construct fidelity).
-   - Assign rawFormat from: 'mcq' (checks IWF-01..19 + FB-M1..M4), 'open_ended' (OE-01..11 + FB-O1..O4), 'cata' (CATA-01..04 + IWF-01,02,04,05,06,10,11,12,13,15,17,19 + FB-C1..C2; CATA-01 flags early formative CATA and suggests MTF/MCQ), 'numeric_math' (NUM-01..05 + FB-N1..N3), 'short_text' (TXT-01..05 + FB-T1..T3), 'ordering' (ORD-01..05 + FB-R1..R3), 'multi_input' (MI-01..04 + FB-I1..I2; route Yes/No MTF matrices & LBD_TAF here!).
-   - Use status 'minor_risk' for minor MCQ wording/length nuances (0 score deduction) and 'revise' only for genuine flaws.
+
+1. SOLVER-FIRST ANSWER KEY & RUBRIC RULE (S3 — READY GATE BLOCKER):
+   - Before trusting any marked key ('*', '[x]', 'Answer:', 'Correct:', or bolded option), INDEPENDENTLY SOLVE every question yourself!
+   - If the author's marked key (such as a trailing '*' or '[x]') selects a factually/statistically wrong option (e.g., inverse-probability p-value fallacy) or swapped concept, you MUST flag 'S3' as 'revise' on that question and set 'quote' to the exact wrong marked option line!
+   - If an open-ended or constructed question omits its rubric/criteria (e.g., 'Graded by TA' or external sheet), flag 'S3', 'OE-01', and 'OE-03' as 'unverified' quoting that scoring line!
+
+2. Alignment per question ('p-<questionId>' units in results[]):
+   - A1 (Content & scope match target LOs; 'unverified' if target LO is unobservable), A2 (Cognitive operation & modality fit), A4 (Tool/AI conditions match LO; 'not_applicable' if none), A5 (Scoring reflects target skill).
+
+3. Set-level checks on unit 'set-1' & Clarity on unit 'sec-1':
+   - 'set-1': S1 (purpose/stakes clear), S2 (domain sampling across target LOs), S5 ('not_applicable' on formative/drafts), FB-S1 (feedback timing fits purpose), FB-S2 (task/process focus).
+   - 'sec-1': C1..C5 (C5 'not_applicable' if no external submission constraints).
+
+4. Per-Question Checks in questions[] (list ALL passing check IDs for the question's format in 'met', and any failing/unverified/na check IDs in 'findings'):
+   - Shared per question: S3 (defensible key/rubric), S4 (fair access & construct fidelity).
+   - 'mcq': IWF-01 (clear stem), IWF-02 (plausible misconception distractors), IWF-03 (no 'all/none of the above'), IWF-04 (balanced option length/detail), IWF-05 (relevant stem info), IWF-06 (parallel options), IWF-07..19 (no cues, single defensible key, positive phrasing, clean grammar, independent items) + Feedback: FB-M1 (explains why correct option works, NOT bare 'Correct/Incorrect'), FB-M2 (task/concept focus), FB-M3 (option-specific distractor misconception repair), FB-M4 (concise actionable guidance).
+   - 'cata': CATA-01 (discourage early formative CATA; recommend Yes/No MTF or MCQ -> status 'revise'), CATA-02 (independent true/false statements), CATA-03 (fair partial-credit scoring; flag harsh all-or-nothing formative grading -> 'revise'), CATA-04 (realistic cognitive load) + IWF-01,02,04,05,06,10,11,12,13,15,17,19 + Feedback: FB-C1 (per-option rationale), FB-C2 (highlights missed vs false-positive selections).
+   - 'numeric_math': NUM-01 (explicit units & format: decimal vs percentage), NUM-02 (explicit rounding rule & grading tolerance), NUM-03 (realistic parameters), NUM-04 (multi-step errors don't cascade silently), NUM-05 (accessible math notation) + Feedback: FB-N1 (worked formula/setup steps), FB-N2 (diagnoses common unit/rounding/formula errors), FB-N3 (interprets result meaning).
+   - 'open_ended': OE-01 (explicit analytic/holistic rubric provided), OE-02 (criteria assess quality, not mere word count), OE-03 (observable level descriptors), OE-04..11 (clear prompt deliverable, scope, exemplars/anchor guidance, authentic context, fair constraints) + Feedback: FB-O1 (criterion-referenced feedback guidance/exemplar), FB-O2 (actionable next-step revision strategy), FB-O3 (prioritizes high-leverage conceptual issues), FB-O4 (preserves student agency).
+   - 'short_text': TXT-01..05 + FB-T1..T3. 'ordering': ORD-01..05 + FB-R1..R3. 'multi_input': MI-01..04 + FB-I1..I2.
+   - IMPORTANT: Status 'minor_risk' is ONLY allowed on minor 'IWF-*' MCQ wording/length polish. NEVER use 'minor_risk' on S3, CATA-*, NUM-*, OE-*, or FB-* checks (use 'revise' or 'unverified')!
    - CRITICAL: Every finding 'quote' MUST be an EXACT verbatim substring copied character-for-character from the assessment document.
 
 Return strict JSON:
 {
-  "summary": "2-sentence synthesis of assessment validity, item quality, and feedback readiness.",
+  "summary": "2-sentence synthesis of assessment validity, answer-key accuracy, item quality, and feedback readiness.",
   "feedbackWithheldForSecureExam": false,
   "results": [
-    { "unit": "set-1", "label": "Assessment Set", "met": ["S1", "S2", "FB-S1", "FB-S2"], "findings": [{ "check": "S5", "status": "not_applicable", "reason": "Formative quiz." }] },
-    { "unit": "sec-1", "label": "Clarity & Structure", "met": ["C1", "C2", "C3", "C4", "C5"], "findings": [] },
+    { "unit": "set-1", "label": "Assessment Set", "met": ["S1", "S2", "FB-S2"], "findings": [{ "check": "FB-S1", "status": "revise", "quote": "Feedback: Correct / Incorrect.", "principle": "FB-S1 · Purpose-matched feedback timing & policy", "reason": "..." }, { "check": "S5", "status": "not_applicable", "reason": "Formative quiz." }] },
+    { "unit": "sec-1", "label": "Clarity & Structure", "met": ["C1", "C2", "C3", "C4"], "findings": [{ "check": "C5", "status": "not_applicable", "reason": "Self-contained quiz." }] },
     { "unit": "p-q1", "label": "Q1 Alignment", "met": ["A1", "A2", "A5"], "findings": [{ "check": "A4", "status": "not_applicable", "reason": "Standard conditions." }] }
   ],
   "questions": [
@@ -217,15 +224,15 @@ Return strict JSON:
       "label": "Question 1",
       "rawFormat": "mcq",
       "role": "formative",
-      "met": ["S3", "S4", "IWF-01", "IWF-02"],
+      "met": ["S4", "IWF-01", "IWF-02", "IWF-03", "IWF-04", "IWF-05", "IWF-06", "IWF-07", "IWF-08", "IWF-09", "IWF-10", "IWF-11", "IWF-12", "IWF-13", "IWF-14", "IWF-15", "IWF-16", "IWF-17", "IWF-18", "IWF-19"],
       "findings": [
         {
-          "check": "FB-M3",
+          "check": "S3",
           "status": "revise",
-          "quote": "Exact verbatim substring from Q1 in the document",
-          "principle": "FB-M3 · Option-specific distractor misconception repair",
-          "reason": "Explains why bare right/wrong or missing distractor feedback leaves misconceptions intact.",
-          "replacement": "Concrete drop-in replacement with option-level feedback"
+          "quote": "- A. Wrong marked option *",
+          "principle": "S3 · Substantively defensible answer key",
+          "reason": "Option A states an inverse-probability misconception; Option B is the valid frequentist definition.",
+          "replacement": "- A. Wrong marked option\\n- B. Correct option *"
         }
       ]
     }
@@ -259,10 +266,19 @@ async function invokeUpstreamLlm({ provider, apiKey, model, baseUrl, systemText,
     return json?.choices?.[0]?.message?.content || '{}';
   }
 
-  // Default Pilot Provider: Google Gemini API
+  // Default Pilot Provider: Google Gemini API (with bounded thinkingBudget on 2.5 models for 3x faster response)
+  const resolvedModel = model || 'gemini-2.5-flash';
   const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-    model || 'gemini-2.5-flash',
+    resolvedModel,
   )}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+  const generationConfig = {
+    temperature: 0.15,
+    responseMimeType: 'application/json',
+  };
+  if (/^gemini-2\.5/i.test(resolvedModel)) {
+    generationConfig.thinkingConfig = { thinkingBudget: 1024 };
+  }
 
   const res = await fetch(geminiUrl, {
     method: 'POST',
@@ -270,10 +286,7 @@ async function invokeUpstreamLlm({ provider, apiKey, model, baseUrl, systemText,
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemText }] },
       contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      generationConfig: {
-        temperature: 0.15,
-        responseMimeType: 'application/json',
-      },
+      generationConfig,
     }),
   });
 

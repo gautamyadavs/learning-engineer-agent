@@ -871,6 +871,49 @@ textarea {
   flex-shrink: 0;
 }
 
+.audit-progress-card {
+  background: var(--brand-50);
+  border: 1px solid hsla(214, 76%, 34%, 0.34);
+  border-radius: var(--radius-md);
+  padding: 13px 15px;
+  box-shadow: var(--shadow-card);
+}
+
+.audit-progress-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.audit-progress-head strong {
+  flex: 1;
+  font-size: 13px;
+  color: var(--brand-700);
+}
+
+.audit-progress-step {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-700);
+}
+
+@keyframes leSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.audit-spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid hsla(214, 76%, 34%, 0.22);
+  border-top-color: var(--brand-600);
+  animation: leSpin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
 .score-card {
   background: var(--bg-sheet);
   border: 1px solid var(--border-subtle);

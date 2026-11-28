@@ -137,6 +137,9 @@ export async function executeAuditAction({
         `${body.provider || 'llm'}_proxy (${body.model || LE_CONFIG.DEFAULT_LLM_MODEL})`,
       );
     }
+    if (action === 'draft_los') {
+      return normalizeDraftedLosPayload(body.data);
+    }
     return body.data;
   }
 
@@ -155,6 +158,9 @@ export async function executeAuditAction({
         rubric,
         `${ephemeralProvider}_ram (${ephemeralModel})`,
       );
+    }
+    if (action === 'draft_los') {
+      return normalizeDraftedLosPayload(rawData);
     }
     return rawData;
   }
@@ -248,16 +254,21 @@ async function callDirectLlmWithRamKey({
     model,
   )}:generateContent?key=${encodeURIComponent(ephemeralApiKey)}`;
 
+  const generationConfig = {
+    temperature: 0.15,
+    responseMimeType: 'application/json',
+  };
+  if (/^gemini-2\.5/i.test(model)) {
+    generationConfig.thinkingConfig = { thinkingBudget: 1024 };
+  }
+
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: 'user', parts: [{ text: userText }] }],
-      generationConfig: {
-        temperature: 0.15,
-        responseMimeType: 'application/json',
-      },
+      generationConfig,
     }),
   });
 
@@ -282,38 +293,43 @@ Return strict JSON:
     return `Draft a concise Markdown 'Prerequisite Refresher' with intuitive explanation, 1 worked example, and 1 self-check for the educator's flagged prerequisite gaps. Return strict JSON: { "remediationMarkdown": "..." }`;
   }
   if (action === 'draft_los') {
-    return `Infer 3 to 5 observable, student-centered Bloom's-verb Learning Objectives aligned to the uploaded assessment. Return strict JSON: { "candidateLosMarkdown": "## Learning Objectives\\n\\n- **LO1:** ..." }`;
+    return `Infer 3 to 5 observable, student-centered Bloom's-verb Learning Objectives aligned to the uploaded assessment. Include '## Target Learning Objectives\\n\\nBy the end of this module, learners will be able to:' once and start each bullet directly with a bold LO ID + capital action verb ('- **LO1:** Classify...'). Return strict JSON: { "candidateLosMarkdown": "..." }`;
   }
   if (track === 'objectives_only') {
     return `You are the Learning Engineer (LE) Agent Reviewer (Rubric v0.3.2 — Track 1: Objectives Only).
-Evaluate each leaf Learning Objective on O1, O2, O3, O4, O5, O6; evaluate unit 'set-1' on O7; evaluate unit 'sec-1' on C1, C2, C3, C4, C5 (mark C5 not_applicable on pure LO lists).
-Exclude orientation notes from leaf LOs and flag them under C1.
-Every finding 'quote' MUST be an EXACT verbatim substring from the document, and 'replacement' a clean drop-in rewrite when applicable.
+Evaluate each leaf Learning Objective on O1, O2, O3, O4 (do not double-deduct O4 when O1/O2 already fails), O5, O6; evaluate unit 'set-1' on O7; evaluate unit 'sec-1' on C1 (flag non-LO orientation notes mixed into Objectives), C2, C3, C4, C5 (mark C5 not_applicable on pure LO lists).
+Every finding 'quote' MUST be an EXACT verbatim substring from the document, and 'replacement' a clean drop-in rewrite preserving bullet formatting.
 Also propose 3-6 KLI Knowledge Components in kc_candidates.
-Return strict JSON:
-{
-  "summary": "2-sentence overview",
-  "results": [
-    { "unit": "lo-1", "label": "LO 1", "met": ["O1","O3","O4","O5","O6"], "findings": [{ "check": "O2", "status": "revise", "quote": "exact substring", "principle": "O2 · Observable Bloom's action verb", "reason": "...", "replacement": "..." }] },
-    { "unit": "set-1", "label": "Objective Set", "met": ["O7"], "findings": [] },
-    { "unit": "sec-1", "label": "Clarity", "met": ["C1","C2","C3","C4"], "findings": [{ "check": "C5", "status": "not_applicable", "reason": "Pure LO list." }] }
-  ],
-  "kc_candidates": [{ "kcId": "kc-1", "loUnit": "lo-1", "statement": "...", "kliType": "skill", "origin": "ai_proposed", "impliedByLoQuote": "exact substring", "suggestedTrimmedLoIfOutOfScope": "..." }]
-}`;
+Return strict JSON: { "summary": "...", "results": [...], "kc_candidates": [...] }`;
   }
   return `You are the Learning Engineer (LE) Agent Reviewer (Rubric v0.3.2 — Track 2: Assessment / Quiz).
-Evaluate:
-- Alignment units ('p-q1', etc.) in results[] on A1, A2, A4 (conditional), A5.
-- Set unit 'set-1' on S1, S2, S5 (conditional), FB-S1, FB-S2.
-- Clarity unit 'sec-1' on C1, C2, C3, C4, C5 (conditional).
-- Questions in questions[] with rawFormat ('mcq' | 'open_ended' | 'cata' | 'numeric_math' | 'short_text' | 'ordering' | 'multi_input'), evaluating S3 (solve & verify answer key/rubric!), S4, format item checks (IWF-01..19 / OE-01..11 / CATA-01..04 / NUM-01..05 / TXT-01..05 / ORD-01..05 / MI-01..04), and format feedback checks (FB-M1..M4 / FB-O1..M4 / FB-C1..C2 / FB-N1..N3 / FB-T1..T3 / FB-R1..R3 / FB-I1..I2).
-Every finding 'quote' MUST be an EXACT verbatim substring from the document.
+1. Independently solve every question BEFORE checking any marked key ('*', '[x]', 'Answer:'). Flag wrong keys as S3 'revise' quoting the wrong option line; flag missing rubrics ('Graded by TA') as S3, OE-01, OE-03 'unverified'.
+2. Evaluate Alignment ('p-q1', etc.) on A1, A2, A4 (conditional), A5; 'set-1' on S1, S2, S5 (conditional), FB-S1, FB-S2; 'sec-1' on C1..C5.
+3. Evaluate each question on S3, S4, format checks (mcq: IWF-01..19 + FB-M1..M4; open_ended: OE-01..11 + FB-O1..O4; cata: CATA-01..04 + IWF core + FB-C1..C2; numeric_math: NUM-01..05 + FB-N1..N3; short_text: TXT-01..05 + FB-T1..T3; ordering: ORD-01..05 + FB-R1..R3; multi_input: MI-01..04 + FB-I1..I2).
+Status 'minor_risk' is ONLY permitted on minor IWF-* polish, never on S3, CATA-*, NUM-*, OE-*, or FB-*. Every 'quote' MUST be an exact verbatim substring.
 Return strict JSON: { "summary": "...", "feedbackWithheldForSecureExam": false, "results": [...], "questions": [...] }`;
 }
 
 /**
- * Sanitizes model output against rubric-v0.3.json so `computeTrackScore()` is 100% crash-proof.
+ * Sanitizes model output against rubric-v0.3.json and enforces deterministic rubric invariants:
+ * 1. `minor_risk` (0-pt advisory) is strictly limited to `IWF-*` MCQ item-writing checks (ADR-0009).
+ * 2. Track 1 `O4` is not double-deducted on leaf LOs already failing `O1` or `O2` unless pure completion.
+ * 3. Track 2 `open_ended` items with `S3 = unverified` (missing rubric) propagate `unverified` to `OE-01` & `OE-03`.
+ * 4. Cleans redundant repeated 'Students will be able to' prefixes if present in `draft_los`.
  */
+function normalizeDraftedLosPayload(raw) {
+  let md = String(raw?.candidateLosMarkdown || '').trim();
+  if (!md) return { candidateLosMarkdown: '' };
+  md = md.replace(
+    /^(\s*[-*]\s*(?:\*\*LO\s*[\d.]+\w*:?\*\*\s*))Students?\s+will\s+be\s+able\s+to\s+(?:\*\*)?([a-z])/gim,
+    (_, prefix, firstChar) => `${prefix}${firstChar.toUpperCase()}`,
+  );
+  if (!/^#{1,4}\s+/m.test(md)) {
+    md = `## Target Learning Objectives\n\nBy the end of this module, learners will be able to:\n${md}`;
+  }
+  return { candidateLosMarkdown: md };
+}
+
 function normalizeModelReviewPayload(raw, track, rubric, modeLabel) {
   const validCheckIds = new Set(rubric.checks.map((c) => c.id));
   const validStatuses = new Set(['revise', 'unverified', 'not_applicable', 'meets', 'minor_risk']);
@@ -324,7 +340,11 @@ function normalizeModelReviewPayload(raw, track, rubric, modeLabel) {
     for (const f of Array.isArray(u.findings) ? u.findings : []) {
       const cid = String(f.check || '').trim();
       if (!validCheckIds.has(cid) || seen.has(cid)) continue;
-      const st = validStatuses.has(f.status) ? f.status : 'revise';
+      let st = validStatuses.has(f.status) ? f.status : 'revise';
+      // Enforce ADR-0009 invariant: minor_risk is strictly for IWF-* MCQ item-writing nuances
+      if (st === 'minor_risk' && !cid.startsWith('IWF-')) {
+        st = 'revise';
+      }
       seen.add(cid);
       cleanFindings.push({
         check: cid,
@@ -356,13 +376,58 @@ function normalizeModelReviewPayload(raw, track, rubric, modeLabel) {
   const rawResults = Array.isArray(raw?.results) ? raw.results : [];
   const results = rawResults.map((r, i) => sanitizeUnit(r, `u-${i + 1}`));
 
+  // Track 1 Invariant: Prevent O4 double-deduction when O1 or O2 already failed on the same leaf LO
+  if (track === 'objectives_only') {
+    for (const r of results) {
+      if (r.unit === 'set-1' || r.unit === 'sec-1') continue;
+      const hasO1OrO2Revise = r.findings.some(
+        (f) => (f.check === 'O1' || f.check === 'O2') && f.status === 'revise',
+      );
+      if (hasO1OrO2Revise) {
+        const o4Idx = r.findings.findIndex(
+          (f) =>
+            f.check === 'O4' &&
+            f.status === 'revise' &&
+            !/\b(?:attend|watch|click|complete\s+worksheet)\b/i.test(f.quote || ''),
+        );
+        if (o4Idx !== -1) {
+          r.findings.splice(o4Idx, 1);
+          if (!r.met.includes('O4')) r.met.push('O4');
+        }
+      }
+    }
+  }
+
   const rawQuestions = Array.isArray(raw?.questions) ? raw.questions : [];
   const questions = rawQuestions.map((q, i) => {
     const base = sanitizeUnit(q, `q${i + 1}`);
+    const rawFormat = String(q.rawFormat || 'mcq');
+    const s3Unverified = base.findings.find((f) => f.check === 'S3' && f.status === 'unverified');
+
+    // Track 2 Invariant: Missing rubric on open_ended ('S3 = unverified') cannot simultaneously pass OE-01 / OE-03
+    if (rawFormat === 'open_ended' && s3Unverified) {
+      for (const oeCid of ['OE-01', 'OE-03']) {
+        base.met = base.met.filter((m) => m !== oeCid);
+        if (!base.findings.some((f) => f.check === oeCid)) {
+          base.findings.push({
+            check: oeCid,
+            status: 'unverified',
+            quote: s3Unverified.quote,
+            principle:
+              oeCid === 'OE-01'
+                ? 'OE-01 · Explicit scoring criteria or rubric'
+                : 'OE-03 · Observable performance-level descriptors',
+            reason:
+              'Scoring rubric or performance descriptors are not included in the uploaded document, so rubric quality cannot be verified yet.',
+          });
+        }
+      }
+    }
+
     return {
       id: base.unit,
       label: base.label,
-      rawFormat: String(q.rawFormat || 'mcq'),
+      rawFormat,
       role: q.role === 'summative' ? 'summative' : 'formative',
       met: base.met,
       findings: base.findings,

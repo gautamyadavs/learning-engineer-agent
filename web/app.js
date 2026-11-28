@@ -117,6 +117,11 @@ const els = {
   markdownEditor: document.getElementById('markdown-editor'),
   annotatedCanvas: document.getElementById('annotated-canvas'),
 
+  auditProgressCard: document.getElementById('audit-progress-card'),
+  auditProgressTitle: document.getElementById('audit-progress-title'),
+  auditProgressElapsed: document.getElementById('audit-progress-elapsed'),
+  auditProgressStep: document.getElementById('audit-progress-step'),
+
   srScoreLive: document.getElementById('sr-score-live'),
   staleVersionBanner: document.getElementById('stale-version-banner'),
   btnRecheckInline: document.getElementById('btn-recheck-inline'),
@@ -458,14 +463,17 @@ function buildFlattenedFindings(docMarkdown, payload) {
     }
   }
 
-  // Anchor each quote in docMarkdown without overlapping spans
-  const occupied = [];
+  // Anchor every quote independently so two checks flagging the same line both keep Locate & Edit Fix!
   const built = rawList.map((item, idx) => {
     const spec = checkLookup.get(item.check);
-    const range = item.quote ? findAvailableQuoteRange(docMarkdown, item.quote, occupied) : null;
-    if (range) occupied.push(range);
-
+    const range = item.quote ? locateBestQuoteRange(docMarkdown, item.quote) : null;
     const isBlocker = item.check === 'S3' && item.status !== 'minor_risk';
+
+    const rawPrinciple = String(item.principle || '').trim();
+    const expandedTitle =
+      !rawPrinciple || rawPrinciple.toUpperCase() === item.check.toUpperCase()
+        ? `${item.check} · ${spec?.label || 'Rubric Check'}`
+        : rawPrinciple;
 
     return {
       id: `f-${idx + 1}`,
@@ -475,7 +483,7 @@ function buildFlattenedFindings(docMarkdown, payload) {
       status: item.status, // 'revise' | 'unverified' | 'minor_risk'
       unit: item.unit,
       unitLabel: item.unitLabel,
-      title: item.principle || `${item.check} · ${spec?.label || 'Rubric Check'}`,
+      title: expandedTitle,
       reason: item.reason,
       quote: range ? docMarkdown.slice(range.start, range.end) : item.quote || '',
       replacement: item.replacement,
@@ -490,33 +498,51 @@ function buildFlattenedFindings(docMarkdown, payload) {
   state.findings = built;
 }
 
-function findAvailableQuoteRange(text, quote, occupiedRanges) {
-  const cleanQuote = quote.trim();
+function locateBestQuoteRange(text, quote, blockedRanges = []) {
+  const cleanQuote = String(quote || '').trim();
   if (!cleanQuote) return null;
 
+  const isFree = (start, end) => !blockedRanges.some((r) => start < r.end && end > r.start);
+
+  // 1. Exact substring match
   let searchFrom = 0;
   while (searchFrom < text.length) {
     const idx = text.indexOf(cleanQuote, searchFrom);
     if (idx === -1) break;
     const end = idx + cleanQuote.length;
-    const overlaps = occupiedRanges.some((r) => idx < r.end && end > r.start);
-    if (!overlaps) {
-      return { start: idx, end };
-    }
+    if (isFree(idx, end)) return { start: idx, end };
     searchFrom = idx + 1;
   }
 
-  const stripped = cleanQuote.replace(/^[-*•]\s+/, '');
-  if (stripped !== cleanQuote && stripped.length > 8) {
+  // 2. Strip leading list marker ('- ', '* ', '1. ') if model quoted with/without bullet
+  const stripped = cleanQuote.replace(/^(?:[-*•]|\d+[.)])\s+/, '');
+  if (stripped !== cleanQuote && stripped.length > 6) {
     const idx = text.indexOf(stripped);
-    if (idx !== -1) {
-      const end = idx + stripped.length;
-      if (!occupiedRanges.some((r) => idx < r.end && end > r.start)) {
-        return { start: idx, end };
-      }
+    if (idx !== -1 && isFree(idx, idx + stripped.length)) {
+      return { start: idx, end: idx + stripped.length };
     }
   }
+
+  // 3. Whitespace-normalized & markdown-emphasis-tolerant regex match
+  if (stripped.length >= 10) {
+    const escaped = stripped
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\\\*\\\*/g, '(?:\\*\\*)?')
+      .replace(/\s+/g, '\\s+');
+    try {
+      const re = new RegExp(escaped, 'i');
+      const m = re.exec(text);
+      if (m && isFree(m.index, m.index + m[0].length)) {
+        return { start: m.index, end: m.index + m[0].length };
+      }
+    } catch {}
+  }
+
   return null;
+}
+
+function findAvailableQuoteRange(text, quote, occupiedRanges = []) {
+  return locateBestQuoteRange(text, quote, occupiedRanges);
 }
 
 function recomputeDeterministicScore() {
@@ -612,49 +638,74 @@ function renderAnnotatedDocument(markdown) {
   const anchored = canAnchorCurrentVersion
     ? state.findings
         .filter((f) => f.range && f.decision !== 'dismissed')
-        .sort((a, b) => a.range.start - b.range.start)
+        .sort((a, b) => a.range.start - b.range.start || b.range.end - a.range.end)
     : [];
+
+  // Group overlapping spans within the same line so multi-check sentences show combined badges [O2 · O4]
+  const groups = [];
+  for (const f of anchored) {
+    const prev = groups[groups.length - 1];
+    const crossesNewline = markdown.slice(f.range.start, f.range.end).includes('\n');
+    if (crossesNewline) continue;
+
+    if (prev && f.range.start < prev.end) {
+      prev.items.push(f);
+    } else {
+      groups.push({ start: f.range.start, end: f.range.end, items: [f] });
+    }
+  }
 
   let cursor = 0;
   const tokens = [];
   const tokenMap = new Map();
 
-  anchored.forEach((f, idx) => {
-    if (f.range.start < cursor) return;
-    tokens.push(markdown.slice(cursor, f.range.start));
+  groups.forEach((grp, idx) => {
+    if (grp.start < cursor) return;
+    tokens.push(markdown.slice(cursor, grp.start));
     const placeholder = `@@LE_HL_${idx}@@`;
-    tokenMap.set(placeholder, f);
+    tokenMap.set(placeholder, grp);
     tokens.push(placeholder);
-    cursor = f.range.end;
+    cursor = grp.end;
   });
   tokens.push(markdown.slice(cursor));
 
   const markedMd = tokens.join('');
   let html = renderMarkdownBlocksToHtml(markedMd);
 
-  for (const [placeholder, f] of tokenMap.entries()) {
-    const modClass =
-      f.decision === 'accepted'
-        ? 'le-hl--accepted'
-        : f.status === 'unverified'
-          ? 'le-hl--unverified'
-          : f.status === 'minor_risk'
-            ? 'le-hl--minor_risk'
-            : '';
-    const activeClass = state.activeFindingId === f.id ? 'is-active' : '';
-    const displaySpan =
-      f.decision === 'accepted' && f.replacement !== undefined
-        ? `<del style="opacity:0.7">${escapeHtml(f.quote)}</del> → <strong>${escapeHtml(
-            f.replacement || '[Removed]',
-          )}</strong>`
-        : formatInlineMarkdown(escapeHtml(f.quote));
+  for (const [placeholder, grp] of tokenMap.entries()) {
+    const acceptedItem = grp.items.find((x) => x.decision === 'accepted' && x.replacement !== undefined);
+    const primary =
+      acceptedItem ||
+      grp.items.find((x) => x.id === state.activeFindingId) ||
+      grp.items.find((x) => x.isBlocker) ||
+      grp.items[0];
 
-    const badgeLabel = f.decision === 'accepted' ? `${f.check} ✓` : f.check;
-    const replacementHtml = `<mark class="le-hl ${modClass} ${activeClass}" data-finding-id="${f.id}" tabindex="0" role="button" aria-label="Inspect finding ${escapeHtml(
-      f.check,
-    )}: ${escapeHtml(f.title)}">${displaySpan}<span class="le-hl__badge">${escapeHtml(
+    const modClass = acceptedItem
+      ? 'le-hl--accepted'
+      : primary.status === 'unverified'
+        ? 'le-hl--unverified'
+        : primary.status === 'minor_risk'
+          ? 'le-hl--minor_risk'
+          : '';
+    const activeClass = grp.items.some((x) => x.id === state.activeFindingId) ? 'is-active' : '';
+    const spanText = markdown.slice(grp.start, grp.end);
+
+    const displaySpan = acceptedItem
+      ? `<del style="opacity:0.7">${escapeHtml(acceptedItem.quote)}</del> → <strong>${escapeHtml(
+          acceptedItem.replacement || '[Removed]',
+        )}</strong>`
+      : formatInlineMarkdown(escapeHtml(spanText));
+
+    const badgeLabel = grp.items
+      .map((x) => (x.decision === 'accepted' ? `${x.check} ✓` : x.check))
+      .join(' · ');
+    const allIds = grp.items.map((x) => x.id).join(' ');
+
+    const replacementHtml = `<mark class="le-hl ${modClass} ${activeClass}" data-finding-id="${
+      primary.id
+    }" data-finding-ids="${allIds}" tabindex="0" role="button" aria-label="Inspect finding ${escapeHtml(
       badgeLabel,
-    )}</span></mark>`;
+    )}">${displaySpan}<span class="le-hl__badge">${escapeHtml(badgeLabel)}</span></mark>`;
 
     html = html.replace(placeholder, replacementHtml);
   }
@@ -1321,15 +1372,60 @@ function renderPriorKnowledgePanel() {
   });
 }
 
+function unstageOverlappingFindings(targetFinding) {
+  if (!targetFinding.range) return 0;
+  let unstaged = 0;
+  for (const other of state.findings) {
+    if (
+      other.id !== targetFinding.id &&
+      other.decision === 'accepted' &&
+      other.range &&
+      targetFinding.range.start < other.range.end &&
+      targetFinding.range.end > other.range.start
+    ) {
+      other.decision = 'pending';
+      unstaged += 1;
+    }
+  }
+  return unstaged;
+}
+
+function formatReplacementPreservingListStructure(docText, range, replacement) {
+  if (!replacement || !replacement.includes('\n')) return replacement;
+  const lineStart = docText.lastIndexOf('\n', Math.max(0, range.start - 1)) + 1;
+  const prefixBeforeRange = docText.slice(lineStart, range.start);
+  const bulletMatch = prefixBeforeRange.match(/^(\s*[-*•]\s+)/);
+  if (!bulletMatch) return replacement;
+
+  const bulletIndentPrefix = bulletMatch[1];
+  const lines = replacement.split('\n').filter((l, i) => i === 0 || l.trim().length > 0);
+  if (lines.length <= 1) return replacement;
+
+  return lines
+    .map((line, idx) => {
+      if (idx === 0) return line;
+      const trimmed = line.trim();
+      if (/^[-*•]\s+/.test(trimmed)) {
+        return `${bulletIndentPrefix.match(/^\s*/)?.[0] || ''}${trimmed}`;
+      }
+      return `${bulletIndentPrefix}${trimmed}`;
+    })
+    .join('\n');
+}
+
 // --- Interactive Handlers ---
 function handleFindingAction(action, findingId) {
   const f = state.findings.find((x) => x.id === findingId);
   if (!f) return;
 
   if (action === 'accept') {
+    const replacedOverlap = unstageOverlappingFindings(f);
     f.decision = 'accepted';
     state.editingFindingId = null;
     state.activeFindingId = f.id;
+    if (replacedOverlap > 0) {
+      showToast(`Updated staged fix on this line to ${f.check}.`, 'info');
+    }
   } else if (action === 'unaccept') {
     f.decision = 'pending';
   } else if (action === 'dismiss') {
@@ -1348,6 +1444,7 @@ function handleFindingAction(action, findingId) {
     const ta = document.getElementById(`edit-fix-box-${f.id}`);
     if (ta) {
       f.replacement = ta.value;
+      unstageOverlappingFindings(f);
       f.decision = 'accepted';
       state.editingFindingId = null;
       showToast(`Custom replacement staged for ${f.check}.`, 'success');
@@ -1382,7 +1479,9 @@ function focusHighlightInDoc(findingId) {
     state.viewMode = 'annotated';
   }
   renderAll();
-  const mark = els.annotatedCanvas.querySelector(`mark[data-finding-id="${findingId}"]`);
+  const mark =
+    els.annotatedCanvas.querySelector(`mark[data-finding-ids~="${findingId}"]`) ||
+    els.annotatedCanvas.querySelector(`mark[data-finding-id="${findingId}"]`);
   if (mark) {
     mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
     mark.classList.add('pulse');
@@ -1392,6 +1491,7 @@ function focusHighlightInDoc(findingId) {
 }
 
 function openDiffPreviewModal(triggerEl = els.btnPreviewApply) {
+  const v = currentVersion();
   const accepted = state.findings
     .filter((f) => f.decision === 'accepted' && typeof f.replacement === 'string' && f.range)
     .sort((a, b) => a.range.start - b.range.start);
@@ -1399,15 +1499,22 @@ function openDiffPreviewModal(triggerEl = els.btnPreviewApply) {
   if (accepted.length === 0) return;
 
   els.diffPreviewList.innerHTML = accepted
-    .map(
-      (f) => `<div class="diff-snippet">
+    .map((f) => {
+      const normalizedAdd = formatReplacementPreservingListStructure(
+        v.markdown,
+        f.range,
+        f.replacement,
+      );
+      return `<div class="diff-snippet">
         <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;margin-bottom:4px">${escapeHtml(
           f.check,
         )} · ${escapeHtml(f.unitLabel)}</div>
         <span class="diff-del">${escapeHtml(f.quote)}</span>
-        <span class="diff-add">${escapeHtml(f.replacement || '[Line removed]')}</span>
-      </div>`,
-    )
+        <span class="diff-add" style="white-space:pre-wrap">${escapeHtml(
+          normalizedAdd || '[Line removed]',
+        )}</span>
+      </div>`;
+    })
     .join('');
 
   openModal(els.modalDiff, triggerEl);
@@ -1421,8 +1528,13 @@ function applyAcceptedChangesAsNewVersion() {
 
   let updatedMd = v.markdown;
   for (const f of accepted) {
+    const safeReplacement = formatReplacementPreservingListStructure(
+      updatedMd,
+      f.range,
+      f.replacement,
+    );
     updatedMd =
-      updatedMd.slice(0, f.range.start) + f.replacement + updatedMd.slice(f.range.end);
+      updatedMd.slice(0, f.range.start) + safeReplacement + updatedMd.slice(f.range.end);
   }
 
   const nextNum = state.versions.length + 1;
@@ -1441,7 +1553,6 @@ function applyAcceptedChangesAsNewVersion() {
   }
   state.awaitingRecheck = true;
   closeModal(els.modalDiff);
-  // Keep user in clean formatted Annotated View rather than jarring switch to raw Markdown
   state.viewMode = 'annotated';
   renderAll();
   showToast(
@@ -1831,19 +1942,34 @@ function bindEvents() {
   });
   bindTablistArrowNavigation(els.railTabs, activateRailTab);
 
-  // Stage All Auto-Fixes
+  // Stage All Non-Overlapping Score-Impacting Auto-Fixes
   els.btnStageAllFixes.addEventListener('click', () => {
     let stagedCount = 0;
+    const claimedRanges = state.findings
+      .filter((f) => f.decision === 'accepted' && f.range)
+      .map((f) => f.range);
+
     state.findings.forEach((f) => {
-      if (f.decision === 'pending' && typeof f.replacement === 'string' && f.range) {
-        f.decision = 'accepted';
-        stagedCount += 1;
+      if (
+        f.decision === 'pending' &&
+        f.status !== 'minor_risk' &&
+        typeof f.replacement === 'string' &&
+        f.range
+      ) {
+        const overlaps = claimedRanges.some(
+          (r) => f.range.start < r.end && f.range.end > r.start,
+        );
+        if (!overlaps) {
+          f.decision = 'accepted';
+          claimedRanges.push(f.range);
+          stagedCount += 1;
+        }
       }
     });
     renderAll();
     if (stagedCount > 0) {
       showToast(
-        `Staged ${stagedCount} auto-fix${stagedCount === 1 ? '' : 'es'} — click "Preview Diff & Save New Version" to inspect.`,
+        `Staged ${stagedCount} non-overlapping auto-fix${stagedCount === 1 ? '' : 'es'} — click "Preview Diff & Save New Version" to inspect.`,
         'success',
       );
     }
@@ -1953,12 +2079,39 @@ function refreshConnectionBadge() {
   els.connStatusLabel.textContent = st.label;
 }
 
+let busyInterval = null;
+
 function setBusy(busy, label = 'Run AI Audit') {
   state.isBusy = busy;
   els.btnRunAudit.disabled = busy;
   els.btnRunAudit.setAttribute('aria-busy', String(busy));
   if (els.btnRunAuditLabel) {
     els.btnRunAuditLabel.textContent = busy ? label : 'Run AI Audit';
+  }
+
+  if (busyInterval) {
+    clearInterval(busyInterval);
+    busyInterval = null;
+  }
+
+  if (els.auditProgressCard) {
+    els.auditProgressCard.hidden = !busy;
+    if (busy) {
+      const startedAt = Date.now();
+      els.auditProgressTitle.textContent = label;
+      els.auditProgressElapsed.textContent = '0.0s';
+      els.auditProgressStep.textContent =
+        'Step 1/2 · Checking target LOs, solving items & evaluating rubric criteria...';
+
+      busyInterval = setInterval(() => {
+        const sec = ((Date.now() - startedAt) / 1000).toFixed(1);
+        els.auditProgressElapsed.textContent = `${sec}s`;
+        if (Number(sec) >= 5.5) {
+          els.auditProgressStep.textContent =
+            'Step 2/2 · Anchoring verbatim document quotes & preparing repair suggestions...';
+        }
+      }, 100);
+    }
   }
 }
 
