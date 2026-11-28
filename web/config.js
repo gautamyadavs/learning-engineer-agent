@@ -17,7 +17,7 @@ export const LE_CONFIG = {
     SALT_HEX: 'deb96a1c15c9732e749ac80cf5aefc59',
     HASH_HEX: '26310534ce55980128ef9e0efbe72cb4f7099b2cb47c7e1eeb15f8c5cff227e1',
   },
-  DEFAULT_PROXY_URL: '',
+  DEFAULT_PROXY_URL: 'https://le-agent-llm-proxy.orchhapalace-hotel.workers.dev',
   PILOT_LLM_PROVIDER: 'gemini',
   DEFAULT_LLM_MODEL: 'gemini-2.5-flash',
   REPO_URL: 'https://github.com/gautamyadavs/learning-engineer-agent',

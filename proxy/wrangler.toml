@@ -1,6 +1,8 @@
 name = "le-agent-llm-proxy"
 main = "cloudflare-worker.js"
 compatibility_date = "2026-11-01"
+workers_dev = true
+preview_urls = false
 
 [vars]
 ALLOWED_ORIGINS = "https://gautamyadavs.github.io,http://localhost:8080,http://127.0.0.1:8080"
